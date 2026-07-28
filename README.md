@@ -16,6 +16,8 @@ Set your OpenAI API key for the current PowerShell session:
 $env:OPENAI_API_KEY="your-api-key-here"
 ```
 
+Or copy `.env.example` to `.env` and use a dotenv loader of your choice.
+
 The generated files are saved in the `output/` folder.
 
 ## Scripts
