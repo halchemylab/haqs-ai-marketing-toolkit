@@ -58,10 +58,11 @@ def choose_option(prompt: str, options: list[str]) -> str:
         print("Please choose a valid option number.")
 
 
-def timestamped_output_path(prefix: str) -> Path:
+def timestamped_output_path(prefix: str, extension: str = "txt") -> Path:
     OUTPUT_DIR.mkdir(exist_ok=True)
+    clean_extension = extension.lstrip(".")
     stamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    return OUTPUT_DIR / f"{prefix}_{stamp}.txt"
+    return OUTPUT_DIR / f"{prefix}_{stamp}.{clean_extension}"
 
 
 def save_text(prefix: str, content: str) -> Path:

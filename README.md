@@ -40,4 +40,10 @@ Generate three email options from pasted source content:
 python email_generator.py
 ```
 
+Generate a QR code PNG from a link:
+
+```powershell
+python qr_code_generator.py
+```
+
 For multiline content prompts, paste the content and press Enter on a blank line when finished.
