@@ -1,0 +1,57 @@
+"""Build campaign tracking URLs with UTM parameters."""
+
+from __future__ import annotations
+
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+
+from haqs_cli import read_optional, read_required, save_text, welcome
+
+
+def add_utm_parameters(
+    landing_page_url: str,
+    source: str,
+    medium: str,
+    campaign_name: str,
+    campaign_content: str,
+) -> str:
+    parsed = urlparse(landing_page_url)
+    existing_query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+    existing_query["utm_source"] = source
+    existing_query["utm_medium"] = medium
+    existing_query["utm_campaign"] = campaign_name
+    if campaign_content:
+        existing_query["utm_content"] = campaign_content
+
+    return urlunparse(
+        parsed._replace(query=urlencode(existing_query, doseq=True))
+    )
+
+
+def main() -> None:
+    welcome("campaign URL building")
+    landing_page_url = read_required("Paste your Landing Page URL: ")
+    source = read_required(
+        "Enter campaign source, e.g. google, medium, substack, linkedin, facebook: "
+    )
+    medium = read_required("Enter medium, e.g. cpc, banner, email, qr_code: ")
+    campaign_name = read_required("Enter campaign_name: ")
+    campaign_content = read_optional(
+        "Enter campaign content to differentiate ads (optional): "
+    )
+
+    campaign_url = add_utm_parameters(
+        landing_page_url=landing_page_url,
+        source=source,
+        medium=medium,
+        campaign_name=campaign_name,
+        campaign_content=campaign_content,
+    )
+
+    path = save_text("campaign_url", campaign_url)
+    print("\nCampaign URL:")
+    print(campaign_url)
+    print(f"\nSaved to: {path}")
+
+
+if __name__ == "__main__":
+    main()
