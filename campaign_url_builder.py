@@ -4,7 +4,15 @@ from __future__ import annotations
 
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
-from haqs_cli import read_optional, read_required, save_text, welcome
+from haqs_cli import (
+    get_hourly_rate,
+    log_roi_event,
+    print_roi_logged,
+    read_optional,
+    read_required,
+    save_text,
+    welcome,
+)
 
 
 def add_utm_parameters(
@@ -48,9 +56,20 @@ def main() -> None:
     )
 
     path = save_text("campaign_url", campaign_url)
+    minutes_saved = 10
+    money_saved = (minutes_saved / 60) * get_hourly_rate()
+    log_roi_event(
+        script="campaign_url_builder",
+        asset_type=f"campaign_url_{source.lower()}",
+        count=1,
+        minutes_per_item=minutes_saved,
+        notes=f"Generated campaign URL for {source}",
+    )
+
     print("\nCampaign URL:")
     print(campaign_url)
     print(f"\nSaved to: {path}")
+    print_roi_logged(1, minutes_saved, money_saved)
 
 
 if __name__ == "__main__":

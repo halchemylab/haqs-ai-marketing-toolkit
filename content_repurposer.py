@@ -4,7 +4,15 @@ from __future__ import annotations
 
 import json
 
-from haqs_cli import generate_text, read_multiline, save_text, welcome
+from haqs_cli import (
+    generate_text,
+    get_hourly_rate,
+    log_roi_event,
+    print_roi_logged,
+    read_multiline,
+    save_text,
+    welcome,
+)
 
 
 OUTPUT_FORMATS = {
@@ -15,6 +23,16 @@ OUTPUT_FORMATS = {
     "newsletter_blurb": "1 short newsletter blurb",
     "hooks": "8 hook ideas",
     "pull_quotes": "5 pull quotes",
+}
+
+ROI_RULES = {
+    "linkedin_posts": {"count": 5, "minutes_per_item": 15},
+    "x_posts": {"count": 10, "minutes_per_item": 15},
+    "facebook_posts": {"count": 3, "minutes_per_item": 15},
+    "email_subject_lines": {"count": 8, "minutes_per_item": 5},
+    "newsletter_blurb": {"count": 1, "minutes_per_item": 15},
+    "hooks": {"count": 8, "minutes_per_item": 5},
+    "pull_quotes": {"count": 5, "minutes_per_item": 5},
 }
 
 
@@ -74,9 +92,21 @@ def main() -> None:
     content_pack = parse_json_response(response_text)
 
     saved_paths = []
+    total_count = 0
+    total_minutes_saved = 0
     for format_name, content in content_pack.items():
         path = save_text(format_name, content)
         saved_paths.append(path)
+        roi_rule = ROI_RULES[format_name]
+        log_roi_event(
+            script="content_repurposer",
+            asset_type=format_name,
+            count=roi_rule["count"],
+            minutes_per_item=roi_rule["minutes_per_item"],
+            notes=f"Generated {OUTPUT_FORMATS[format_name]}",
+        )
+        total_count += roi_rule["count"]
+        total_minutes_saved += roi_rule["count"] * roi_rule["minutes_per_item"]
 
         print(f"===== {format_name} =====")
         print(content)
@@ -85,6 +115,9 @@ def main() -> None:
     print("Saved files:")
     for path in saved_paths:
         print(f"- {path}")
+    money_saved = (total_minutes_saved / 60) * get_hourly_rate()
+    print()
+    print_roi_logged(total_count, total_minutes_saved, money_saved)
 
 
 if __name__ == "__main__":

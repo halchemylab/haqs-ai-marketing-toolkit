@@ -18,6 +18,13 @@ $env:OPENAI_API_KEY="your-api-key-here"
 
 Or copy `.env.example` to `.env` and use a dotenv loader of your choice.
 
+The ROI tracker uses `$50/hour` by default. To override it for the current
+PowerShell session:
+
+```powershell
+$env:HOURLY_RATE="75"
+```
+
 The generated files are saved in the `output/` folder.
 
 ## Scripts
@@ -46,4 +53,23 @@ Generate a QR code PNG from a link:
 python qr_code_generator.py
 ```
 
+View automation ROI totals:
+
+```powershell
+python roi_report.py
+```
+
 For multiline content prompts, paste the content and press Enter on a blank line when finished.
+
+## ROI Tracking
+
+Each completed generator run appends a row to `output/automation_roi.csv`.
+
+Default estimates:
+
+- QR code: 5 minutes saved per code
+- Campaign URL: 10 minutes saved per URL
+- Email draft: 15 minutes saved per email
+- LinkedIn, Facebook, and X posts: 15 minutes saved per post
+- Email subject line, hook, or pull quote: 5 minutes saved per item
+- Newsletter blurb: 15 minutes saved per blurb

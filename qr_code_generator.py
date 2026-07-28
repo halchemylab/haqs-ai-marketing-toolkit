@@ -4,7 +4,14 @@ from __future__ import annotations
 
 import qrcode
 
-from haqs_cli import read_required, timestamped_output_path, welcome
+from haqs_cli import (
+    get_hourly_rate,
+    log_roi_event,
+    print_roi_logged,
+    read_required,
+    timestamped_output_path,
+    welcome,
+)
 
 
 def create_qr_code(link: str):
@@ -26,9 +33,19 @@ def main() -> None:
     image = create_qr_code(link)
     path = timestamped_output_path("qr_code", "png")
     image.save(path)
+    minutes_saved = 5
+    money_saved = (minutes_saved / 60) * get_hourly_rate()
+    log_roi_event(
+        script="qr_code_generator",
+        asset_type="qr_code",
+        count=1,
+        minutes_per_item=minutes_saved,
+        notes="Generated QR code image",
+    )
 
     print("\nQR code saved to:")
     print(path)
+    print_roi_logged(1, minutes_saved, money_saved)
 
 
 if __name__ == "__main__":
