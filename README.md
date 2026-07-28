@@ -22,10 +22,10 @@ The generated files are saved in the `output/` folder.
 
 ## Scripts
 
-Generate an organic Facebook, LinkedIn, or X post for an event:
+Repurpose pasted source material into several marketing content formats:
 
 ```powershell
-python social_event_post.py
+python content_repurposer.py
 ```
 
 Build a campaign URL with UTM parameters:
