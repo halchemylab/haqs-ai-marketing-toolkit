@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import qrcode
 
-from haqs_cli import (
+from toolkit_helpers import (
     get_hourly_rate,
     log_roi_event,
     print_roi_logged,

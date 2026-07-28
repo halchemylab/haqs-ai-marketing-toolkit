@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from haqs_cli import (
+from toolkit_helpers import (
     generate_text,
     get_hourly_rate,
     log_roi_event,
