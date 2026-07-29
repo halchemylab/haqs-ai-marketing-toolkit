@@ -53,6 +53,12 @@ Generate a QR code PNG from a link:
 python qr_code_generator.py
 ```
 
+Build a marketing project plan CSV for spreadsheet editing or Asana import:
+
+```powershell
+python project_plan_builder.py
+```
+
 View automation ROI totals:
 
 ```powershell
@@ -73,3 +79,4 @@ Default estimates:
 - LinkedIn, Facebook, and X posts: 15 minutes saved per post
 - Email subject line, hook, or pull quote: 5 minutes saved per item
 - Newsletter blurb: 15 minutes saved per blurb
+- Project plan: 45 minutes saved per plan
