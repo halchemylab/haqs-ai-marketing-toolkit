@@ -65,6 +65,16 @@ Build a marketing project plan CSV for spreadsheet editing or Asana import:
 python project_plan_builder.py
 ```
 
+Turn raw customer feedback into short quotes, a case-study snippet, social
+proof, a website testimonial, and marketing callouts:
+
+```powershell
+python testimonial_formatter.py
+```
+
+The testimonial formatter asks whether the customer's identity may be shown.
+Choose the anonymous option to omit their name and company from generated copy.
+
 View automation ROI totals:
 
 ```powershell
@@ -87,3 +97,4 @@ Default estimates:
 - Newsletter blurb: 15 minutes saved per blurb
 - Landing page copy: 90 minutes saved per page
 - Project plan: 45 minutes saved per plan
+- Testimonial content: 10 minutes saved per item
