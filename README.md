@@ -53,6 +53,12 @@ Generate a QR code PNG from a link:
 python qr_code_generator.py
 ```
 
+Generate landing page copy from a guided mini-brief:
+
+```powershell
+python landing_page_copy_generator.py
+```
+
 Build a marketing project plan CSV for spreadsheet editing or Asana import:
 
 ```powershell
@@ -79,4 +85,5 @@ Default estimates:
 - LinkedIn, Facebook, and X posts: 15 minutes saved per post
 - Email subject line, hook, or pull quote: 5 minutes saved per item
 - Newsletter blurb: 15 minutes saved per blurb
+- Landing page copy: 90 minutes saved per page
 - Project plan: 45 minutes saved per plan
