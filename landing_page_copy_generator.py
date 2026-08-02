@@ -7,7 +7,6 @@ from pathlib import Path
 from utils.marketing import (
     choose_option,
     generate_text,
-    get_hourly_rate,
     log_roi_event,
     print_roi_logged,
     read_optional,
@@ -257,8 +256,7 @@ def main() -> None:
 
     path = save_markdown("landing_page_copy", landing_page_copy)
     minutes_saved = 90
-    money_saved = (minutes_saved / 60) * get_hourly_rate()
-    log_roi_event(
+    roi = log_roi_event(
         script="landing_page_copy_generator",
         asset_type="landing_page_copy",
         count=1,
@@ -268,7 +266,7 @@ def main() -> None:
 
     print(landing_page_copy)
     print(f"\nSaved to: {path}")
-    print_roi_logged(1, minutes_saved, money_saved)
+    print_roi_logged(roi)
 
 
 if __name__ == "__main__":

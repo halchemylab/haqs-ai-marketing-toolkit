@@ -8,7 +8,6 @@ from typing import Any
 from utils.marketing import (
     choose_option,
     generate_text,
-    get_hourly_rate,
     log_roi_event,
     print_roi_logged,
     read_multiline,
@@ -259,9 +258,7 @@ def main() -> None:
 
     total_count = sum(OUTPUT_COUNTS.values())
     minutes_per_item = 10
-    total_minutes = total_count * minutes_per_item
-    money_saved = (total_minutes / 60) * get_hourly_rate()
-    log_roi_event(
+    roi = log_roi_event(
         script="testimonial_formatter",
         asset_type="testimonial_content",
         count=total_count,
@@ -273,7 +270,7 @@ def main() -> None:
     for path in saved_paths:
         print(f"- {path}")
     print()
-    print_roi_logged(total_count, total_minutes, money_saved)
+    print_roi_logged(roi)
 
 
 if __name__ == "__main__":

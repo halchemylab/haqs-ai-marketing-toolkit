@@ -5,7 +5,6 @@ from __future__ import annotations
 import qrcode
 
 from utils.marketing import (
-    get_hourly_rate,
     log_roi_event,
     print_roi_logged,
     read_required,
@@ -34,8 +33,7 @@ def main() -> None:
     path = timestamped_output_path("qr_code", "png")
     image.save(path)
     minutes_saved = 5
-    money_saved = (minutes_saved / 60) * get_hourly_rate()
-    log_roi_event(
+    roi = log_roi_event(
         script="qr_code_generator",
         asset_type="qr_code",
         count=1,
@@ -45,7 +43,7 @@ def main() -> None:
 
     print("\nQR code saved to:")
     print(path)
-    print_roi_logged(1, minutes_saved, money_saved)
+    print_roi_logged(roi)
 
 
 if __name__ == "__main__":

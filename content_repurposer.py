@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 
 from utils.marketing import (
+    combine_roi_results,
     generate_text,
-    get_hourly_rate,
     log_roi_event,
     print_roi_logged,
     read_multiline,
@@ -92,21 +92,19 @@ def main() -> None:
     content_pack = parse_json_response(response_text)
 
     saved_paths = []
-    total_count = 0
-    total_minutes_saved = 0
+    roi_results = []
     for format_name, content in content_pack.items():
         path = save_text(format_name, content)
         saved_paths.append(path)
         roi_rule = ROI_RULES[format_name]
-        log_roi_event(
+        roi = log_roi_event(
             script="content_repurposer",
             asset_type=format_name,
             count=roi_rule["count"],
             minutes_per_item=roi_rule["minutes_per_item"],
             notes=f"Generated {OUTPUT_FORMATS[format_name]}",
         )
-        total_count += roi_rule["count"]
-        total_minutes_saved += roi_rule["count"] * roi_rule["minutes_per_item"]
+        roi_results.append(roi)
 
         print(f"===== {format_name} =====")
         print(content)
@@ -115,9 +113,8 @@ def main() -> None:
     print("Saved files:")
     for path in saved_paths:
         print(f"- {path}")
-    money_saved = (total_minutes_saved / 60) * get_hourly_rate()
     print()
-    print_roi_logged(total_count, total_minutes_saved, money_saved)
+    print_roi_logged(combine_roi_results(roi_results))
 
 
 if __name__ == "__main__":

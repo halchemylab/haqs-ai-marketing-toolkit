@@ -6,6 +6,7 @@ import csv
 import os
 from datetime import datetime
 from pathlib import Path
+from typing import TypedDict
 
 
 OUTPUT_DIR = Path("output")
@@ -22,6 +23,15 @@ ROI_FIELDNAMES = [
     "money_saved",
     "notes",
 ]
+
+
+class RoiResult(TypedDict):
+    count: int
+    minutes_per_item: int
+    time_saved_minutes: int
+    hourly_rate: float
+    money_saved: float
+    path: Path
 
 
 def welcome(task: str) -> None:
@@ -102,7 +112,7 @@ def log_roi_event(
     count: int,
     minutes_per_item: int,
     notes: str = "",
-) -> Path:
+) -> RoiResult:
     OUTPUT_DIR.mkdir(exist_ok=True)
     hourly_rate = get_hourly_rate()
     time_saved_minutes = count * minutes_per_item
@@ -127,14 +137,42 @@ def log_roi_event(
             }
         )
 
-    return ROI_LOG_PATH
+    return {
+        "count": count,
+        "minutes_per_item": minutes_per_item,
+        "time_saved_minutes": time_saved_minutes,
+        "hourly_rate": hourly_rate,
+        "money_saved": money_saved,
+        "path": ROI_LOG_PATH,
+    }
 
 
-def print_roi_logged(count: int, time_saved_minutes: int, money_saved: float) -> None:
+def print_roi_logged(roi: RoiResult) -> None:
     print(
-        f"ROI logged: {count} generated, "
-        f"{time_saved_minutes} minutes saved, ${money_saved:.2f} saved."
+        f"ROI logged: {roi['count']} generated, "
+        f"{roi['time_saved_minutes']} minutes saved, ${roi['money_saved']:.2f} saved."
     )
+
+
+def combine_roi_results(results: list[RoiResult]) -> RoiResult:
+    if not results:
+        return {
+            "count": 0,
+            "minutes_per_item": 0,
+            "time_saved_minutes": 0,
+            "hourly_rate": get_hourly_rate(),
+            "money_saved": 0.0,
+            "path": ROI_LOG_PATH,
+        }
+
+    return {
+        "count": sum(result["count"] for result in results),
+        "minutes_per_item": 0,
+        "time_saved_minutes": sum(result["time_saved_minutes"] for result in results),
+        "hourly_rate": results[0]["hourly_rate"],
+        "money_saved": round(sum(result["money_saved"] for result in results), 2),
+        "path": results[0]["path"],
+    }
 
 
 def get_openai_client():

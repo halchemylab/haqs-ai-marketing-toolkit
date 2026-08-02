@@ -9,7 +9,6 @@ from pathlib import Path
 
 from utils.marketing import (
     OUTPUT_DIR,
-    get_hourly_rate,
     log_roi_event,
     print_roi_logged,
     read_optional,
@@ -330,8 +329,7 @@ def main() -> None:
     write_readable_plan(readable_path, campaign_name, rows)
 
     minutes_saved = 45
-    money_saved = (minutes_saved / 60) * get_hourly_rate()
-    log_roi_event(
+    roi = log_roi_event(
         script="project_plan_builder",
         asset_type=f"project_plan_{campaign_type}",
         count=1,
@@ -343,7 +341,7 @@ def main() -> None:
     print(f"Generic CSV: {generic_path}")
     print(f"Asana CSV: {asana_path}")
     print(f"Review plan: {readable_path}")
-    print_roi_logged(1, minutes_saved, money_saved)
+    print_roi_logged(roi)
     print("\nTip: Adjust dates, assignees, or dependencies directly in the CSV before importing.")
 
 

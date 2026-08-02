@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from utils.marketing import (
     generate_text,
-    get_hourly_rate,
     log_roi_event,
     print_roi_logged,
     read_multiline,
@@ -54,9 +53,7 @@ def main() -> None:
     path = save_text("email", emails)
     count = 3
     minutes_per_item = 15
-    time_saved = count * minutes_per_item
-    money_saved = (time_saved / 60) * get_hourly_rate()
-    log_roi_event(
+    roi = log_roi_event(
         script="email_generator",
         asset_type="email",
         count=count,
@@ -66,7 +63,7 @@ def main() -> None:
 
     print(emails)
     print(f"\nSaved to: {path}")
-    print_roi_logged(count, time_saved, money_saved)
+    print_roi_logged(roi)
 
 
 if __name__ == "__main__":

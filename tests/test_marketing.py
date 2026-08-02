@@ -1,0 +1,74 @@
+import csv
+import os
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+from utils import marketing
+
+
+class MarketingRoiTests(unittest.TestCase):
+    def test_log_roi_event_returns_calculated_totals_and_writes_row(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            roi_path = output_dir / "automation_roi.csv"
+
+            with (
+                patch.object(marketing, "OUTPUT_DIR", output_dir),
+                patch.object(marketing, "ROI_LOG_PATH", roi_path),
+                patch.dict(os.environ, {"HOURLY_RATE": "75"}),
+            ):
+                roi = marketing.log_roi_event(
+                    script="test_script",
+                    asset_type="test_asset",
+                    count=2,
+                    minutes_per_item=30,
+                    notes="test notes",
+                )
+
+            self.assertEqual(roi["count"], 2)
+            self.assertEqual(roi["minutes_per_item"], 30)
+            self.assertEqual(roi["time_saved_minutes"], 60)
+            self.assertEqual(roi["hourly_rate"], 75.0)
+            self.assertEqual(roi["money_saved"], 75.0)
+            self.assertEqual(roi["path"], roi_path)
+
+            with roi_path.open(newline="", encoding="utf-8") as file:
+                rows = list(csv.DictReader(file))
+
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(rows[0]["script"], "test_script")
+            self.assertEqual(rows[0]["asset_type"], "test_asset")
+            self.assertEqual(rows[0]["time_saved_minutes"], "60")
+            self.assertEqual(rows[0]["money_saved"], "75.00")
+
+    def test_combine_roi_results_sums_totals(self):
+        combined = marketing.combine_roi_results(
+            [
+                {
+                    "count": 2,
+                    "minutes_per_item": 30,
+                    "time_saved_minutes": 60,
+                    "hourly_rate": 75.0,
+                    "money_saved": 75.0,
+                    "path": Path("output/automation_roi.csv"),
+                },
+                {
+                    "count": 3,
+                    "minutes_per_item": 10,
+                    "time_saved_minutes": 30,
+                    "hourly_rate": 75.0,
+                    "money_saved": 37.5,
+                    "path": Path("output/automation_roi.csv"),
+                },
+            ]
+        )
+
+        self.assertEqual(combined["count"], 5)
+        self.assertEqual(combined["time_saved_minutes"], 90)
+        self.assertEqual(combined["money_saved"], 112.5)
+
+
+if __name__ == "__main__":
+    unittest.main()
