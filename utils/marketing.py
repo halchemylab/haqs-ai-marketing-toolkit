@@ -9,9 +9,11 @@ from pathlib import Path
 from typing import TypedDict
 
 
-OUTPUT_DIR = Path("output")
+DEFAULT_OUTPUT_DIR = "output"
+OUTPUT_DIR = Path(os.getenv("HAQS_OUTPUT_DIR", DEFAULT_OUTPUT_DIR))
 ROI_LOG_PATH = OUTPUT_DIR / "automation_roi.csv"
 DEFAULT_HOURLY_RATE = 50.0
+DEFAULT_OPENAI_MODEL = "gpt-4.1-mini"
 ROI_FIELDNAMES = [
     "timestamp",
     "script",
@@ -106,6 +108,10 @@ def get_hourly_rate() -> float:
         return DEFAULT_HOURLY_RATE
 
 
+def get_openai_model() -> str:
+    return os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL).strip() or DEFAULT_OPENAI_MODEL
+
+
 def log_roi_event(
     script: str,
     asset_type: str,
@@ -188,12 +194,12 @@ def get_openai_client():
 def generate_text(
     system_prompt: str,
     user_prompt: str,
-    model: str = "gpt-4.1-mini",
+    model: str | None = None,
     text_format: dict | None = None,
 ) -> str:
     client = get_openai_client()
     request = {
-        "model": model,
+        "model": model or get_openai_model(),
         "input": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},

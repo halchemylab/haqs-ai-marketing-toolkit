@@ -18,6 +18,13 @@ $env:OPENAI_API_KEY="your-api-key-here"
 
 Or copy `.env.example` to `.env` and use a dotenv loader of your choice.
 
+By default, the AI scripts use `gpt-4.1-mini`. To use a different model for
+the current PowerShell session:
+
+```powershell
+$env:OPENAI_MODEL="gpt-4.1"
+```
+
 The ROI tracker uses `$50/hour` by default. To override it for the current
 PowerShell session:
 
@@ -26,6 +33,12 @@ $env:HOURLY_RATE="75"
 ```
 
 The generated files are saved in the `output/` folder.
+
+To save generated files somewhere else for the current PowerShell session:
+
+```powershell
+$env:HAQS_OUTPUT_DIR="custom-output"
+```
 
 ## Scripts
 
