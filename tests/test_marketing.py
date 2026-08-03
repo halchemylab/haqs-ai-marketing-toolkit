@@ -70,5 +70,24 @@ class MarketingRoiTests(unittest.TestCase):
         self.assertEqual(combined["money_saved"], 112.5)
 
 
+class MarketingAiGenerationTests(unittest.TestCase):
+    def test_generate_text_requires_openai_api_key(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with self.assertRaisesRegex(marketing.AiGenerationError, "OPENAI_API_KEY"):
+                marketing.generate_text("system", "user")
+
+    def test_generate_text_rejects_empty_response(self):
+        class FakeResponses:
+            def create(self, **kwargs):
+                return type("FakeResponse", (), {"output_text": "   "})()
+
+        class FakeClient:
+            responses = FakeResponses()
+
+        with patch.object(marketing, "get_openai_client", return_value=FakeClient()):
+            with self.assertRaisesRegex(marketing.AiGenerationError, "empty response"):
+                marketing.generate_text("system", "user")
+
+
 if __name__ == "__main__":
     unittest.main()

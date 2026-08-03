@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from utils.marketing import (
+    AiGenerationError,
     generate_text,
     log_roi_event,
     print_roi_logged,
@@ -45,10 +46,14 @@ def main() -> None:
     purpose = read_required("What is the purpose of the email? ")
     print("\nGenerating emails...\n")
 
-    emails = generate_text(
-        system_prompt="You are a precise marketing email copywriter.",
-        user_prompt=build_prompt(source_content, purpose),
-    )
+    try:
+        emails = generate_text(
+            system_prompt="You are a precise marketing email copywriter.",
+            user_prompt=build_prompt(source_content, purpose),
+        )
+    except AiGenerationError as exc:
+        print(f"Error: {exc}")
+        return
 
     path = save_text("email", emails)
     count = 3

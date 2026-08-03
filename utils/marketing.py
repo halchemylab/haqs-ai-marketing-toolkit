@@ -36,6 +36,10 @@ class RoiResult(TypedDict):
     path: Path
 
 
+class AiGenerationError(RuntimeError):
+    """Raised when an AI generation request cannot be completed."""
+
+
 def welcome(task: str) -> None:
     print(f"Welcome Lord Haqua. Please let me assist you with {task}.")
     print()
@@ -183,7 +187,7 @@ def combine_roi_results(results: list[RoiResult]) -> RoiResult:
 
 def get_openai_client():
     if not os.getenv("OPENAI_API_KEY"):
-        raise RuntimeError(
+        raise AiGenerationError(
             "OPENAI_API_KEY is not set. Set it in your terminal before running this script."
         )
     from openai import OpenAI
@@ -197,18 +201,30 @@ def generate_text(
     model: str | None = None,
     text_format: dict | None = None,
 ) -> str:
-    client = get_openai_client()
-    request = {
-        "model": model or get_openai_model(),
-        "input": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-    }
-    if text_format:
-        request["text"] = {"format": text_format}
+    try:
+        client = get_openai_client()
+        request = {
+            "model": model or get_openai_model(),
+            "input": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+        }
+        if text_format:
+            request["text"] = {"format": text_format}
 
-    response = client.responses.create(
-        **request,
-    )
-    return response.output_text.strip()
+        response = client.responses.create(
+            **request,
+        )
+    except AiGenerationError:
+        raise
+    except Exception as exc:
+        raise AiGenerationError(
+            "AI generation failed. Check your model setting, network connection, "
+            "API key, and OpenAI account status."
+        ) from exc
+
+    output_text = response.output_text.strip()
+    if not output_text:
+        raise AiGenerationError("AI generation returned an empty response.")
+    return output_text

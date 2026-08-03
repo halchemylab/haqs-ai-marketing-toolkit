@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from utils.marketing import (
+    AiGenerationError,
     choose_option,
     generate_text,
     log_roi_event,
@@ -236,23 +237,27 @@ def main() -> None:
 
     print("\nGenerating landing page copy...\n")
 
-    landing_page_copy = generate_text(
-        system_prompt="You are a precise conversion copywriter for landing pages.",
-        user_prompt=build_prompt(
-            offer_name=offer_name,
-            offer_type=offer_type,
-            offer_description=offer_description,
-            audience=audience,
-            page_goal=page_goal,
-            tone=tone,
-            audience_problem=audience_problem,
-            main_benefit=main_benefit,
-            primary_cta=primary_cta,
-            credibility=credibility,
-            must_include=must_include,
-            avoid=avoid,
-        ),
-    )
+    try:
+        landing_page_copy = generate_text(
+            system_prompt="You are a precise conversion copywriter for landing pages.",
+            user_prompt=build_prompt(
+                offer_name=offer_name,
+                offer_type=offer_type,
+                offer_description=offer_description,
+                audience=audience,
+                page_goal=page_goal,
+                tone=tone,
+                audience_problem=audience_problem,
+                main_benefit=main_benefit,
+                primary_cta=primary_cta,
+                credibility=credibility,
+                must_include=must_include,
+                avoid=avoid,
+            ),
+        )
+    except AiGenerationError as exc:
+        print(f"Error: {exc}")
+        return
 
     path = save_markdown("landing_page_copy", landing_page_copy)
     minutes_saved = 90

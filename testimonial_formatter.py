@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 from utils.marketing import (
+    AiGenerationError,
     choose_option,
     generate_text,
     log_roi_event,
@@ -296,15 +297,28 @@ def main() -> None:
     )
 
     print("\nFormatting testimonial content...\n")
-    response_text = generate_text(
-        system_prompt=(
-            "You are a precise testimonial editor. Preserve customer meaning, protect "
-            "privacy, and never invent or quantify claims."
-        ),
-        user_prompt=build_prompt(feedback, attribution, product_or_service),
-        text_format=TESTIMONIAL_PACK_SCHEMA,
-    )
-    content_pack = parse_testimonial_response(response_text, expected_attribution=attribution)
+    try:
+        response_text = generate_text(
+            system_prompt=(
+                "You are a precise testimonial editor. Preserve customer meaning, protect "
+                "privacy, and never invent or quantify claims."
+            ),
+            user_prompt=build_prompt(feedback, attribution, product_or_service),
+            text_format=TESTIMONIAL_PACK_SCHEMA,
+        )
+    except AiGenerationError as exc:
+        print(f"Error: {exc}")
+        return
+
+    try:
+        content_pack = parse_testimonial_response(
+            response_text, expected_attribution=attribution
+        )
+    except ValueError as exc:
+        path = save_text("testimonial_formatter_raw_response", response_text)
+        print(f"Error: AI response could not be parsed: {exc}")
+        print(f"Raw response saved to: {path}")
+        return
     formatted_outputs = format_content_pack(content_pack)
 
     saved_paths = []

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 from utils.marketing import (
+    AiGenerationError,
     combine_roi_results,
     generate_text,
     log_roi_event,
@@ -100,12 +101,23 @@ def main() -> None:
         return
 
     print("\nGenerating content pack...\n")
-    response_text = generate_text(
-        system_prompt="You are a precise marketing strategist and content repurposing assistant.",
-        user_prompt=build_prompt(source_content),
-        text_format=CONTENT_PACK_SCHEMA,
-    )
-    content_pack = parse_json_response(response_text)
+    try:
+        response_text = generate_text(
+            system_prompt="You are a precise marketing strategist and content repurposing assistant.",
+            user_prompt=build_prompt(source_content),
+            text_format=CONTENT_PACK_SCHEMA,
+        )
+    except AiGenerationError as exc:
+        print(f"Error: {exc}")
+        return
+
+    try:
+        content_pack = parse_json_response(response_text)
+    except ValueError as exc:
+        path = save_text("content_repurposer_raw_response", response_text)
+        print(f"Error: AI response could not be parsed: {exc}")
+        print(f"Raw response saved to: {path}")
+        return
 
     saved_paths = []
     roi_results = []
