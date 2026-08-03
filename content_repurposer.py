@@ -35,6 +35,21 @@ ROI_RULES = {
     "pull_quotes": {"count": 5, "minutes_per_item": 5},
 }
 
+CONTENT_PACK_SCHEMA = {
+    "type": "json_schema",
+    "name": "content_repurposing_pack",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "properties": {
+            key: {"type": "string", "minLength": 1}
+            for key in OUTPUT_FORMATS
+        },
+        "required": list(OUTPUT_FORMATS),
+        "additionalProperties": False,
+    },
+}
+
 
 def build_prompt(source_content: str) -> str:
     format_list = "\n".join(
@@ -88,6 +103,7 @@ def main() -> None:
     response_text = generate_text(
         system_prompt="You are a precise marketing strategist and content repurposing assistant.",
         user_prompt=build_prompt(source_content),
+        text_format=CONTENT_PACK_SCHEMA,
     )
     content_pack = parse_json_response(response_text)
 

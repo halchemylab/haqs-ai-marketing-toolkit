@@ -25,6 +25,64 @@ OUTPUT_COUNTS = {
     "callouts": 3,
 }
 
+TESTIMONIAL_PACK_SCHEMA = {
+    "type": "json_schema",
+    "name": "testimonial_content_pack",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "properties": {
+            "short_quotes": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "text": {"type": "string", "minLength": 1},
+                        "attribution": {"type": "string", "minLength": 1},
+                    },
+                    "required": ["text", "attribution"],
+                    "additionalProperties": False,
+                },
+                "minItems": OUTPUT_COUNTS["short_quotes"],
+                "maxItems": OUTPUT_COUNTS["short_quotes"],
+            },
+            "case_study_snippet": {
+                "type": "object",
+                "properties": {
+                    "challenge": {"type": "string", "minLength": 1},
+                    "experience": {"type": "string", "minLength": 1},
+                    "outcome": {"type": "string", "minLength": 1},
+                },
+                "required": ["challenge", "experience", "outcome"],
+                "additionalProperties": False,
+            },
+            "social_proof": {
+                "type": "array",
+                "items": {"type": "string", "minLength": 1},
+                "minItems": OUTPUT_COUNTS["social_proof"],
+                "maxItems": OUTPUT_COUNTS["social_proof"],
+            },
+            "website_testimonial": {
+                "type": "object",
+                "properties": {
+                    "text": {"type": "string", "minLength": 1},
+                    "attribution": {"type": "string", "minLength": 1},
+                },
+                "required": ["text", "attribution"],
+                "additionalProperties": False,
+            },
+            "callouts": {
+                "type": "array",
+                "items": {"type": "string", "minLength": 1},
+                "minItems": OUTPUT_COUNTS["callouts"],
+                "maxItems": OUTPUT_COUNTS["callouts"],
+            },
+        },
+        "required": list(OUTPUT_COUNTS),
+        "additionalProperties": False,
+    },
+}
+
 
 def build_attribution(
     customer_name: str,
@@ -244,6 +302,7 @@ def main() -> None:
             "privacy, and never invent or quantify claims."
         ),
         user_prompt=build_prompt(feedback, attribution, product_or_service),
+        text_format=TESTIMONIAL_PACK_SCHEMA,
     )
     content_pack = parse_testimonial_response(response_text, expected_attribution=attribution)
     formatted_outputs = format_content_pack(content_pack)

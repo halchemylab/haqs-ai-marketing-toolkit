@@ -185,13 +185,24 @@ def get_openai_client():
     return OpenAI()
 
 
-def generate_text(system_prompt: str, user_prompt: str, model: str = "gpt-4.1-mini") -> str:
+def generate_text(
+    system_prompt: str,
+    user_prompt: str,
+    model: str = "gpt-4.1-mini",
+    text_format: dict | None = None,
+) -> str:
     client = get_openai_client()
-    response = client.responses.create(
-        model=model,
-        input=[
+    request = {
+        "model": model,
+        "input": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
+    }
+    if text_format:
+        request["text"] = {"format": text_format}
+
+    response = client.responses.create(
+        **request,
     )
     return response.output_text.strip()
