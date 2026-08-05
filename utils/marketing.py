@@ -7,6 +7,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 from typing import TypedDict
+from urllib.parse import urlparse
 
 
 DEFAULT_OUTPUT_DIR = "output"
@@ -72,6 +73,24 @@ def read_required(prompt: str) -> str:
 
 def read_optional(prompt: str) -> str:
     return input(prompt).strip()
+
+
+def validate_url(url: str) -> str:
+    value = url.strip()
+    parsed = urlparse(value)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ValueError("Enter a full URL that starts with http:// or https://.")
+    if any(char.isspace() for char in value):
+        raise ValueError("Enter a URL without spaces.")
+    return value
+
+
+def read_url(prompt: str) -> str:
+    while True:
+        try:
+            return validate_url(read_required(prompt))
+        except ValueError as exc:
+            print(exc)
 
 
 def choose_option(prompt: str, options: list[str]) -> str:

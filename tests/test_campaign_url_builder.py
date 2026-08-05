@@ -52,6 +52,16 @@ class CampaignUrlBuilderTests(unittest.TestCase):
             "&utm_campaign=new_campaign&utm_content=search_ad",
         )
 
+    def test_rejects_url_without_http_scheme(self):
+        with self.assertRaisesRegex(ValueError, "http:// or https://"):
+            add_utm_parameters(
+                landing_page_url="example.com/page",
+                source="linkedin",
+                medium="social",
+                campaign_name="summer_launch",
+                campaign_content="",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

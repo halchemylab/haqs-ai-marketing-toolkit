@@ -7,13 +7,15 @@ import qrcode
 from utils.marketing import (
     log_roi_event,
     print_roi_logged,
-    read_required,
+    read_url,
     timestamped_output_path,
+    validate_url,
     welcome,
 )
 
 
 def create_qr_code(link: str):
+    link = validate_url(link)
     qr = qrcode.QRCode(
         version=None,
         error_correction=qrcode.constants.ERROR_CORRECT_M,
@@ -27,7 +29,7 @@ def create_qr_code(link: str):
 
 def main() -> None:
     welcome("QR code generation")
-    link = read_required("Paste your link: ")
+    link = read_url("Paste your full link, including https://: ")
 
     image = create_qr_code(link)
     path = timestamped_output_path("qr_code", "png")

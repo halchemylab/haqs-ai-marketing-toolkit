@@ -9,7 +9,9 @@ from utils.marketing import (
     print_roi_logged,
     read_optional,
     read_required,
+    read_url,
     save_text,
+    validate_url,
     welcome,
 )
 
@@ -21,6 +23,7 @@ def add_utm_parameters(
     campaign_name: str,
     campaign_content: str,
 ) -> str:
+    landing_page_url = validate_url(landing_page_url)
     parsed = urlparse(landing_page_url)
     existing_query = dict(parse_qsl(parsed.query, keep_blank_values=True))
     existing_query["utm_source"] = source
@@ -36,7 +39,7 @@ def add_utm_parameters(
 
 def main() -> None:
     welcome("campaign URL building")
-    landing_page_url = read_required("Paste your Landing Page URL: ")
+    landing_page_url = read_url("Paste your full Landing Page URL, including https://: ")
     source = read_required(
         "Enter campaign source, e.g. google, medium, substack, linkedin, facebook: "
     )
