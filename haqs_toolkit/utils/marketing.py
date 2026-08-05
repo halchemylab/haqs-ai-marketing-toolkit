@@ -12,9 +12,29 @@ from urllib.parse import urlparse
 
 DEFAULT_OUTPUT_DIR = "output"
 OUTPUT_DIR = Path(os.getenv("HAQS_OUTPUT_DIR", DEFAULT_OUTPUT_DIR))
-ROI_LOG_PATH = OUTPUT_DIR / "automation_roi.csv"
+ROI_LOG_PATH = OUTPUT_DIR / "roi" / "automation_roi.csv"
 DEFAULT_HOURLY_RATE = 50.0
 DEFAULT_OPENAI_MODEL = "gpt-4.1-mini"
+OUTPUT_CATEGORY_BY_PREFIX = {
+    "campaign_url": "campaign_urls",
+    "email": "emails",
+    "landing_page": "landing_pages",
+    "landing_page_copy": "landing_pages",
+    "project_plan": "project_plans",
+    "project_plan_asana": "project_plans",
+    "project_plan_review": "project_plans",
+    "qr_code": "qr_codes",
+    "testimonial": "testimonials",
+    "testimonial_formatter_raw_response": "testimonials",
+    "content_repurposer_raw_response": "content_repurposing",
+    "linkedin_posts": "content_repurposing",
+    "x_posts": "content_repurposing",
+    "facebook_posts": "content_repurposing",
+    "email_subject_lines": "content_repurposing",
+    "newsletter_blurb": "content_repurposing",
+    "hooks": "content_repurposing",
+    "pull_quotes": "content_repurposing",
+}
 ROI_FIELDNAMES = [
     "timestamp",
     "script",
@@ -107,11 +127,30 @@ def choose_option(prompt: str, options: list[str]) -> str:
         print("Please choose a valid option number.")
 
 
-def timestamped_output_path(prefix: str, extension: str = "txt") -> Path:
-    OUTPUT_DIR.mkdir(exist_ok=True)
+def output_category_for_prefix(prefix: str) -> str:
+    if prefix in OUTPUT_CATEGORY_BY_PREFIX:
+        return OUTPUT_CATEGORY_BY_PREFIX[prefix]
+
+    for known_prefix, category in OUTPUT_CATEGORY_BY_PREFIX.items():
+        if prefix.startswith(f"{known_prefix}_"):
+            return category
+
+    return "misc"
+
+
+def timestamped_output_path(
+    prefix: str,
+    extension: str = "txt",
+    category: str | None = None,
+) -> Path:
+    now = datetime.now()
+    output_dir = OUTPUT_DIR / now.strftime("%Y-%m-%d") / (
+        category or output_category_for_prefix(prefix)
+    )
+    output_dir.mkdir(parents=True, exist_ok=True)
     clean_extension = extension.lstrip(".")
-    stamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    return OUTPUT_DIR / f"{prefix}_{stamp}.{clean_extension}"
+    stamp = now.strftime("%Y-%m-%d_%H-%M-%S")
+    return output_dir / f"{prefix}_{stamp}.{clean_extension}"
 
 
 def save_text(prefix: str, content: str) -> Path:
@@ -142,7 +181,7 @@ def log_roi_event(
     minutes_per_item: int,
     notes: str = "",
 ) -> RoiResult:
-    OUTPUT_DIR.mkdir(exist_ok=True)
+    ROI_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
     hourly_rate = get_hourly_rate()
     time_saved_minutes = count * minutes_per_item
     money_saved = round((time_saved_minutes / 60) * hourly_rate, 2)

@@ -9,10 +9,27 @@ from utils import marketing
 
 
 class MarketingRoiTests(unittest.TestCase):
+    def test_timestamped_output_path_uses_date_and_category_folder(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+
+            with patch.object(marketing, "OUTPUT_DIR", output_dir):
+                path = marketing.timestamped_output_path("campaign_url", "txt")
+
+            self.assertEqual(path.parent.name, "campaign_urls")
+            self.assertEqual(
+                path.parent.parent.name,
+                marketing.datetime.now().strftime("%Y-%m-%d"),
+            )
+            self.assertEqual(path.parent.parent.parent, output_dir)
+            self.assertTrue(path.name.startswith("campaign_url_"))
+            self.assertEqual(path.suffix, ".txt")
+            self.assertTrue(path.parent.exists())
+
     def test_log_roi_event_returns_calculated_totals_and_writes_row(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)
-            roi_path = output_dir / "automation_roi.csv"
+            roi_path = output_dir / "roi" / "automation_roi.csv"
 
             with (
                 patch.object(marketing, "OUTPUT_DIR", output_dir),

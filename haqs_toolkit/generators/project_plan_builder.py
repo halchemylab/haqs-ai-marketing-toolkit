@@ -8,7 +8,6 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from haqs_toolkit.utils.marketing import (
-    OUTPUT_DIR,
     log_roi_event,
     print_roi_logged,
     read_optional,
@@ -246,7 +245,7 @@ def build_rows(
 
 
 def write_csv(path: Path, rows: list[dict[str, str]], fieldnames: list[str]) -> None:
-    OUTPUT_DIR.mkdir(exist_ok=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()

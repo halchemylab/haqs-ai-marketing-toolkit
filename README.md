@@ -32,7 +32,8 @@ PowerShell session:
 $env:HOURLY_RATE="75"
 ```
 
-The generated files are saved in the `output/` folder.
+Generated files are saved in dated category folders under `output/`, for example
+`output/2026-08-05/emails/` or `output/2026-08-05/qr_codes/`.
 
 To save generated files somewhere else for the current PowerShell session:
 
@@ -98,7 +99,7 @@ For multiline content prompts, paste the content and press Enter on a blank line
 
 ## ROI Tracking
 
-Each completed generator run appends a row to `output/automation_roi.csv`.
+Each completed generator run appends a row to `output/roi/automation_roi.csv`.
 
 Default estimates:
 
