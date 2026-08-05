@@ -1,12 +1,18 @@
 import unittest
 from datetime import date
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from project_plan_builder import (
+    ASANA_FIELDNAMES,
+    PROJECT_PLAN_FIELDNAMES,
     add_business_days,
+    asana_rows,
     build_rows,
     parse_channels,
     parse_date,
     parse_team,
+    write_csv,
 )
 
 
@@ -57,6 +63,22 @@ class ProjectPlanBuilderTests(unittest.TestCase):
             ],
             "Sam",
         )
+
+    def test_write_csv_writes_headers_for_empty_project_plan(self):
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "empty_plan.csv"
+
+            write_csv(path, [], PROJECT_PLAN_FIELDNAMES)
+
+            with open(path, encoding="utf-8") as file:
+                self.assertEqual(
+                    file.readline().strip(),
+                    ",".join(PROJECT_PLAN_FIELDNAMES),
+                )
+
+    def test_asana_fieldnames_do_not_depend_on_export_rows(self):
+        self.assertEqual(asana_rows([]), [])
+        self.assertIn("Section/Column", ASANA_FIELDNAMES)
 
 
 if __name__ == "__main__":

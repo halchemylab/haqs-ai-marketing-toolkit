@@ -115,6 +115,33 @@ CHANNEL_ALIASES = {
     "twitter": "x",
 }
 
+PROJECT_PLAN_FIELDNAMES = [
+    "Task Name",
+    "Description",
+    "Owner Role",
+    "Assignee",
+    "Start Date",
+    "Due Date",
+    "Section",
+    "Priority",
+    "Status",
+    "Tags",
+    "Dependencies",
+    "Campaign",
+    "Campaign Type",
+]
+
+ASANA_FIELDNAMES = [
+    "Name",
+    "Notes",
+    "Assignee",
+    "Start Date",
+    "Due Date",
+    "Section/Column",
+    "Tags",
+    "Dependencies",
+]
+
 
 def parse_date(raw_value: str) -> date:
     try:
@@ -232,6 +259,9 @@ def write_readable_plan(path: Path, campaign_name: str, rows: list[dict[str, str
         sections.setdefault(row["Section"], []).append(row)
 
     lines = [f"# {campaign_name} Project Plan", ""]
+    if not rows:
+        lines.append("No tasks generated.")
+
     for section, section_rows in sections.items():
         lines.extend([f"## {section}", ""])
         for row in section_rows:
@@ -319,11 +349,11 @@ def main() -> None:
     )
 
     generic_path = timestamped_output_path("project_plan", "csv")
-    write_csv(generic_path, rows, list(rows[0].keys()))
+    write_csv(generic_path, rows, PROJECT_PLAN_FIELDNAMES)
 
     asana_path = timestamped_output_path("project_plan_asana", "csv")
     asana_export = asana_rows(rows)
-    write_csv(asana_path, asana_export, list(asana_export[0].keys()))
+    write_csv(asana_path, asana_export, ASANA_FIELDNAMES)
 
     readable_path = timestamped_output_path("project_plan_review", "md")
     write_readable_plan(readable_path, campaign_name, rows)
