@@ -1,1 +1,2 @@
-"""Shared utility package for HAQS marketing scripts."""
+"""Backward-compatible wrapper for shared toolkit utilities."""
+

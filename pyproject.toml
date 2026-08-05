@@ -24,7 +24,12 @@ py-modules = [
     "roi_report",
     "testimonial_formatter",
 ]
-packages = ["utils"]
+packages = [
+    "haqs_toolkit",
+    "haqs_toolkit.generators",
+    "haqs_toolkit.utils",
+    "utils",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,52 +1,9 @@
-"""Generate a QR code image from a link."""
+"""Backward-compatible wrapper for the QR code generator."""
 
-from __future__ import annotations
-
-import qrcode
-
-from utils.marketing import (
-    log_roi_event,
-    print_roi_logged,
-    read_url,
-    timestamped_output_path,
-    validate_url,
-    welcome,
-)
-
-
-def create_qr_code(link: str):
-    link = validate_url(link)
-    qr = qrcode.QRCode(
-        version=None,
-        error_correction=qrcode.constants.ERROR_CORRECT_M,
-        box_size=12,
-        border=4,
-    )
-    qr.add_data(link)
-    qr.make(fit=True)
-    return qr.make_image(fill_color="black", back_color="white")
-
-
-def main() -> None:
-    welcome("QR code generation")
-    link = read_url("Paste your full link, including https://: ")
-
-    image = create_qr_code(link)
-    path = timestamped_output_path("qr_code", "png")
-    image.save(path)
-    minutes_saved = 5
-    roi = log_roi_event(
-        script="qr_code_generator",
-        asset_type="qr_code",
-        count=1,
-        minutes_per_item=minutes_saved,
-        notes="Generated QR code image",
-    )
-
-    print("\nQR code saved to:")
-    print(path)
-    print_roi_logged(roi)
+from haqs_toolkit.generators.qr_code_generator import *  # noqa: F403
+from haqs_toolkit.generators.qr_code_generator import main
 
 
 if __name__ == "__main__":
     main()
+
