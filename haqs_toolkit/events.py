@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import json
+from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse
 
 
 RECOMMENDED_FIELDS = [
@@ -21,6 +23,18 @@ RECOMMENDED_FIELDS = [
     "tone",
     "channels",
 ]
+REQUIRED_FIELDS = [
+    "event_name",
+    "event_date",
+    "audience",
+    "goal",
+    "cta",
+    "registration_url",
+]
+
+
+class EventBriefError(ValueError):
+    """Raised when an event brief cannot be loaded or validated."""
 
 
 def ensure_event_packet_dirs(event_dir: Path) -> None:
@@ -29,7 +43,50 @@ def ensure_event_packet_dirs(event_dir: Path) -> None:
 
 
 def load_event_brief(path: Path) -> dict[str, object]:
-    return json.loads(path.read_text(encoding="utf-8"))
+    if not path.exists():
+        raise EventBriefError(f"Missing required file: {path}")
+
+    try:
+        brief = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise EventBriefError(f"Invalid JSON in {path}: {exc.msg}") from exc
+
+    if not isinstance(brief, dict):
+        raise EventBriefError("brief.json must contain a JSON object.")
+
+    validate_event_brief(brief)
+    return brief
+
+
+def validate_event_brief(brief: dict[str, object]) -> None:
+    errors = []
+    for field in REQUIRED_FIELDS:
+        value = brief.get(field)
+        if value is None or str(value).strip() == "":
+            errors.append(f"Missing required field: {field}")
+
+    event_date = str(brief.get("event_date", "")).strip()
+    if event_date:
+        try:
+            datetime.strptime(event_date, "%Y-%m-%d")
+        except ValueError:
+            errors.append("Invalid event_date: use YYYY-MM-DD.")
+
+    registration_url = str(brief.get("registration_url", "")).strip()
+    if registration_url:
+        parsed = urlparse(registration_url)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            errors.append("Invalid registration_url: use a full http:// or https:// URL.")
+
+    channels = brief.get("channels")
+    if channels is not None and (
+        not isinstance(channels, list)
+        or not all(str(channel).strip() for channel in channels)
+    ):
+        errors.append("Invalid channels: use a non-empty JSON array of channel names.")
+
+    if errors:
+        raise EventBriefError("\n".join(errors))
 
 
 def brief_text(brief: dict[str, object]) -> str:
@@ -131,7 +188,11 @@ def main(argv: list[str] | None = None) -> int:
     ensure_event_packet_dirs(event_dir)
     output_dir = args.out or event_dir / "outputs"
 
-    brief = load_event_brief(brief_path)
+    try:
+        brief = load_event_brief(brief_path)
+    except EventBriefError as exc:
+        print(f"Error: {exc}")
+        return 1
     paths = write_event_assets(brief, output_dir)
 
     print(f"Generated {len(paths)} event files:")
