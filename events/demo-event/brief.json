@@ -1,0 +1,14 @@
+{
+  "event_name": "Demo Growth Workshop",
+  "event_date": "2026-09-18",
+  "event_time": "10:00 AM",
+  "timezone": "America/Los_Angeles",
+  "location": "Online",
+  "audience": "Small business owners who want a cleaner marketing workflow",
+  "goal": "Drive registrations for a live workshop",
+  "offer": "A 60-minute practical session on turning one campaign idea into emails, posts, and a landing page outline",
+  "cta": "Register Now",
+  "registration_url": "https://example.com/demo-growth-workshop",
+  "tone": "Clear, practical, and professional",
+  "channels": ["email", "linkedin", "facebook"]
+}
