@@ -102,6 +102,7 @@ def brief_text(brief: dict[str, object]) -> str:
 
 
 def write_event_assets(brief: dict[str, object], output_dir: Path) -> list[Path]:
+    print(f"Preparing output directory: {output_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
     event_name = str(brief.get("event_name", "Event"))
     cta = str(brief.get("cta", "Register Now"))
@@ -139,6 +140,7 @@ def write_event_assets(brief: dict[str, object], output_dir: Path) -> list[Path]
     paths = []
     for filename, content in assets.items():
         path = output_dir / filename
+        print(f"Writing {filename}...")
         path.write_text(content.strip() + "\n", encoding="utf-8")
         paths.append(path)
     return paths
@@ -185,14 +187,17 @@ def main(argv: list[str] | None = None) -> int:
 
     event_dir = args.event_dir
     brief_path = event_dir / "brief.json"
+    print(f"Using event packet: {event_dir}")
     ensure_event_packet_dirs(event_dir)
     output_dir = args.out or event_dir / "outputs"
 
     try:
+        print(f"Reading brief: {brief_path}")
         brief = load_event_brief(brief_path)
     except EventBriefError as exc:
         print(f"Error: {exc}")
         return 1
+    print("Brief validation passed.")
     paths = write_event_assets(brief, output_dir)
 
     print(f"Generated {len(paths)} event files:")
