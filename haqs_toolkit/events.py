@@ -7,6 +7,22 @@ import json
 from pathlib import Path
 
 
+RECOMMENDED_FIELDS = [
+    "event_name",
+    "event_date",
+    "event_time",
+    "timezone",
+    "location",
+    "audience",
+    "goal",
+    "offer",
+    "cta",
+    "registration_url",
+    "tone",
+    "channels",
+]
+
+
 def load_event_brief(path: Path) -> dict[str, object]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -68,11 +84,21 @@ def write_event_assets(brief: dict[str, object], output_dir: Path) -> list[Path]
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate predictable marketing files from an event packet."
+        description="Generate predictable marketing files from an event packet.",
+        epilog=(
+            "Example: python scripts/run_event_pipeline.py "
+            "events/demo-event --out events/demo-event/outputs"
+        ),
+    )
+    parser.add_argument(
+        "--list-fields",
+        action="store_true",
+        help="Print recommended brief.json fields and exit.",
     )
     parser.add_argument(
         "event_dir",
         type=Path,
+        nargs="?",
         help="Path to an event packet directory containing brief.json.",
     )
     parser.add_argument(
@@ -86,6 +112,15 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.list_fields:
+        print("Recommended brief.json fields:")
+        for field in RECOMMENDED_FIELDS:
+            print(f"- {field}")
+        return 0
+
+    if args.event_dir is None:
+        parser.error("event_dir is required unless --list-fields is used.")
+
     event_dir = args.event_dir
     brief_path = event_dir / "brief.json"
     output_dir = args.out or event_dir / "outputs"
