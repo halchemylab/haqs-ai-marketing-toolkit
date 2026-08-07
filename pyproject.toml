@@ -19,6 +19,7 @@ py-modules = [
     "content_repurposer",
     "email_generator",
     "landing_page_copy_generator",
+    "main",
     "project_plan_builder",
     "qr_code_generator",
     "roi_report",
@@ -30,6 +31,9 @@ packages = [
     "haqs_toolkit.utils",
     "utils",
 ]
+
+[project.scripts]
+haqs-toolkit = "haqs_toolkit.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
