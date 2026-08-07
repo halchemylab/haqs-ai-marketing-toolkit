@@ -35,6 +35,7 @@ packages = [
 
 [project.scripts]
 haqs-toolkit = "haqs_toolkit.cli:main"
+haqs-event = "haqs_toolkit.events:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

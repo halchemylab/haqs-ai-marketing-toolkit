@@ -66,3 +66,15 @@ events/<event-slug>/
 
 The event runner reads `brief.json`, validates required fields, and writes a
 predictable set of review-ready marketing files to `outputs/`.
+
+Run it directly:
+
+```powershell
+python scripts/run_event_pipeline.py events/demo-event
+```
+
+Or, after installing the package:
+
+```powershell
+haqs-event events/demo-event
+```

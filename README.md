@@ -43,6 +43,18 @@ $env:HAQS_OUTPUT_DIR="custom-output"
 
 ## Scripts
 
+Generate a predictable event asset packet from `events/<event-slug>/brief.json`:
+
+```powershell
+python scripts/run_event_pipeline.py events/demo-event
+```
+
+If the package is installed, the same runner is available as:
+
+```powershell
+haqs-event events/demo-event
+```
+
 Repurpose pasted source material into several marketing content formats:
 
 ```powershell
