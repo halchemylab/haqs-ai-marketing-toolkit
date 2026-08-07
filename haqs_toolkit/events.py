@@ -23,6 +23,11 @@ RECOMMENDED_FIELDS = [
 ]
 
 
+def ensure_event_packet_dirs(event_dir: Path) -> None:
+    (event_dir / "inputs").mkdir(parents=True, exist_ok=True)
+    (event_dir / "outputs").mkdir(parents=True, exist_ok=True)
+
+
 def load_event_brief(path: Path) -> dict[str, object]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -123,6 +128,7 @@ def main(argv: list[str] | None = None) -> int:
 
     event_dir = args.event_dir
     brief_path = event_dir / "brief.json"
+    ensure_event_packet_dirs(event_dir)
     output_dir = args.out or event_dir / "outputs"
 
     brief = load_event_brief(brief_path)
