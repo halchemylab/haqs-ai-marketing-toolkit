@@ -1,6 +1,29 @@
 # HAQS AI Marketing Toolkit
 
-Terminal Python scripts for generating marketing content and campaign URLs.
+Personal AI-assisted marketing toolkit for generating campaign assets, URLs,
+emails, landing copy, QR codes, project plans, testimonials, and ROI tracking
+reports.
+
+## How I Use This
+
+I usually open this repository folder in Codex and use the Codex chat as the
+main interface.
+
+Typical flow:
+
+- Open Codex in this folder.
+- Describe the campaign, event, client task, or asset I need.
+- Ask Codex which script or workflow fits the job.
+- Let Codex run or update the scripts and organize the generated files.
+- Review the results under `output/`.
+
+Useful Codex prompts:
+
+- "Run the event pipeline for `events/demo-event`."
+- "Turn this client feedback into testimonials."
+- "Build UTM links for this campaign."
+- "Generate landing page copy from this offer."
+- "Show me the ROI report."
 
 ## Setup
 
