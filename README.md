@@ -25,6 +25,19 @@ Useful Codex prompts:
 - "Generate landing page copy from this offer."
 - "Show me the ROI report."
 
+## Brand Voice
+
+The toolkit uses one editable brand voice file:
+
+```text
+brand_voice.txt
+```
+
+Before generating assets for a company, client, or event, edit that file with
+the voice you want to use. Every AI copy script loads it automatically. The
+individual scripts can still use local asset tone, such as email tone, social
+channel style, or landing page tone.
+
 ## Setup
 
 Install dependencies:

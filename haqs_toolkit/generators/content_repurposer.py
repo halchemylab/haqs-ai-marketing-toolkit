@@ -6,15 +6,16 @@ import json
 
 from haqs_toolkit.utils.marketing import (
     AiGenerationError,
+    brand_voice_prompt_block,
     combine_roi_results,
     generate_text,
+    load_brand_voice,
     log_roi_event,
     print_roi_logged,
     read_multiline,
     save_text,
     welcome,
 )
-
 
 OUTPUT_FORMATS = {
     "linkedin_posts": "5 LinkedIn post ideas",
@@ -52,11 +53,13 @@ CONTENT_PACK_SCHEMA = {
 }
 
 
-def build_prompt(source_content: str) -> str:
+def build_prompt(source_content: str, brand_voice: str | None = None) -> str:
     format_list = "\n".join(
         f'- "{key}": {description}' for key, description in OUTPUT_FORMATS.items()
     )
     return f"""
+{brand_voice_prompt_block(brand_voice)}
+
 Repurpose the source material below into a practical marketing content pack.
 
 Return a valid JSON object only. Do not wrap it in Markdown. The JSON object must use
@@ -68,7 +71,8 @@ Requirements:
 - Do not invent dates, speakers, prices, venues, statistics, or promises.
 - Include the exact placeholder [url here] anywhere a destination link is needed.
 - Make each format ready to review, edit, and publish.
-- Keep the writing clear, professional, and useful to a marketer.
+- Local asset tone: adapt each output to its channel while staying clear,
+  professional, and useful to a marketer.
 - For list-style outputs, number each item inside the plain-text string.
 
 Source material:
@@ -101,10 +105,14 @@ def main() -> None:
         return
 
     print("\nGenerating content pack...\n")
+    brand_voice = load_brand_voice()
     try:
         response_text = generate_text(
-            system_prompt="You are a precise marketing strategist and content repurposing assistant.",
-            user_prompt=build_prompt(source_content),
+            system_prompt=(
+                "You are a precise marketing strategist and content "
+                "repurposing assistant."
+            ),
+            user_prompt=build_prompt(source_content, brand_voice),
             text_format=CONTENT_PACK_SCHEMA,
         )
     except AiGenerationError as exc:

@@ -87,6 +87,34 @@ class MarketingRoiTests(unittest.TestCase):
         self.assertEqual(combined["money_saved"], 112.5)
 
 
+class BrandVoiceTests(unittest.TestCase):
+    def test_load_brand_voice_reads_existing_file(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "voice.md"
+            path.write_text("Plainspoken and practical.", encoding="utf-8")
+
+            self.assertEqual(
+                marketing.load_brand_voice(path),
+                "Plainspoken and practical.",
+            )
+
+    def test_load_brand_voice_uses_builtin_default_when_file_is_missing(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "missing.md"
+
+            self.assertEqual(
+                marketing.load_brand_voice(path),
+                marketing.DEFAULT_BRAND_VOICE,
+            )
+
+    def test_brand_voice_prompt_block_explains_global_and_local_tone(self):
+        block = marketing.brand_voice_prompt_block("Direct and useful.")
+
+        self.assertIn("Brand voice", block)
+        self.assertIn("Direct and useful.", block)
+        self.assertIn("local adjustments", block)
+
+
 class MarketingAiGenerationTests(unittest.TestCase):
     def test_generate_text_requires_openai_api_key(self):
         with patch.dict(os.environ, {}, clear=True):

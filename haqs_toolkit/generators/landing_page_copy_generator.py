@@ -6,8 +6,10 @@ from pathlib import Path
 
 from haqs_toolkit.utils.marketing import (
     AiGenerationError,
+    brand_voice_prompt_block,
     choose_option,
     generate_text,
+    load_brand_voice,
     log_roi_event,
     print_roi_logged,
     read_optional,
@@ -15,7 +17,6 @@ from haqs_toolkit.utils.marketing import (
     timestamped_output_path,
     welcome,
 )
-
 
 OFFER_TYPES = [
     "Service",
@@ -114,12 +115,15 @@ def build_prompt(
     credibility: str,
     must_include: str,
     avoid: str,
+    brand_voice: str | None = None,
 ) -> str:
     credibility_text = credibility or "No extra proof points provided."
     must_include_text = must_include or "No required details provided."
     avoid_text = avoid or "No restricted claims, words, or topics provided."
 
     return f"""
+{brand_voice_prompt_block(brand_voice)}
+
 Create polished landing page copy from this brief.
 
 Brief:
@@ -138,9 +142,12 @@ Brief:
 
 Requirements:
 - Return Markdown only.
-- Do not invent prices, guarantees, deadlines, statistics, testimonials, locations, or company history.
+- Do not invent prices, guarantees, deadlines, statistics, testimonials,
+  locations, or company history.
 - Use [url here] anywhere a button or link destination is needed.
 - Keep the copy specific to the brief and ready to paste into a landing page.
+- Use the selected tone as the local page tone while preserving the selected
+  brand voice.
 - Provide multiple options where useful, but do not over-explain the strategy.
 - Avoid hype, vague filler, and unsupported claims.
 
@@ -176,7 +183,8 @@ Provide 3-4 clear steps.
 Provide 3 concise feature/value blocks.
 
 ## Proof / Credibility Section
-Write copy using only the credibility details provided. If none were provided, write a credibility section that does not imply external proof.
+Write copy using only the credibility details provided. If none were provided,
+write a credibility section that does not imply external proof.
 
 ## FAQ
 Provide 5 FAQs with concise answers.
@@ -236,6 +244,7 @@ def main() -> None:
     )
 
     print("\nGenerating landing page copy...\n")
+    brand_voice = load_brand_voice()
 
     try:
         landing_page_copy = generate_text(
@@ -253,6 +262,7 @@ def main() -> None:
                 credibility=credibility,
                 must_include=must_include,
                 avoid=avoid,
+                brand_voice=brand_voice,
             ),
         )
     except AiGenerationError as exc:

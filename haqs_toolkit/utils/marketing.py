@@ -9,12 +9,27 @@ from pathlib import Path
 from typing import TypedDict
 from urllib.parse import urlparse
 
-
 DEFAULT_OUTPUT_DIR = "output"
 OUTPUT_DIR = Path(os.getenv("HAQS_OUTPUT_DIR", DEFAULT_OUTPUT_DIR))
 ROI_LOG_PATH = OUTPUT_DIR / "roi" / "automation_roi.csv"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+BRAND_VOICE_PATH = REPO_ROOT / "brand_voice.txt"
 DEFAULT_HOURLY_RATE = 50.0
 DEFAULT_OPENAI_MODEL = "gpt-4.1-mini"
+DEFAULT_BRAND_VOICE = """
+Clear, practical, professional, and direct.
+
+Use the audience supplied in the brief, source material, or script prompts.
+
+Sound like a helpful marketing strategist, a plainspoken expert, and an
+efficient implementation partner.
+
+Avoid hype, buzzwords, fake urgency, unsupported claims, overpromising, and
+corporate filler.
+
+Use short paragraphs, make the next step obvious, prefer specific benefits
+over vague claims, and stay grounded in the supplied brief or source material.
+""".strip()
 OUTPUT_CATEGORY_BY_PREFIX = {
     "campaign_url": "campaign_urls",
     "email": "emails",
@@ -159,6 +174,30 @@ def save_text(prefix: str, content: str) -> Path:
     return path
 
 
+def load_brand_voice(path: Path | None = None) -> str:
+    """Load the editable brand voice, falling back to a generic default."""
+    voice_path = path or BRAND_VOICE_PATH
+    try:
+        brand_voice = voice_path.read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        return DEFAULT_BRAND_VOICE
+
+    return brand_voice or DEFAULT_BRAND_VOICE
+
+
+def brand_voice_prompt_block(brand_voice: str | None = None) -> str:
+    """Format the editable brand voice for insertion into AI prompts."""
+    voice = (brand_voice or load_brand_voice()).strip()
+    return f"""
+Brand voice:
+{voice}
+
+Use the brand voice as the baseline. Treat asset-specific tone, channel,
+or format instructions as local adjustments within that voice, not replacements
+for it.
+""".strip()
+
+
 def get_hourly_rate() -> float:
     raw_rate = os.getenv("HOURLY_RATE", "").strip()
     if not raw_rate:
@@ -171,7 +210,10 @@ def get_hourly_rate() -> float:
 
 
 def get_openai_model() -> str:
-    return os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL).strip() or DEFAULT_OPENAI_MODEL
+    return (
+        os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL).strip()
+        or DEFAULT_OPENAI_MODEL
+    )
 
 
 def log_roi_event(
@@ -246,7 +288,8 @@ def combine_roi_results(results: list[RoiResult]) -> RoiResult:
 def get_openai_client():
     if not os.getenv("OPENAI_API_KEY"):
         raise AiGenerationError(
-            "OPENAI_API_KEY is not set. Set it in your terminal before running this script."
+            "OPENAI_API_KEY is not set. Set it in your terminal before running "
+            "this script."
         )
     from openai import OpenAI
 

@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
+from haqs_toolkit.utils.marketing import load_brand_voice
 
 RECOMMENDED_FIELDS = [
     "event_name",
@@ -76,7 +77,9 @@ def validate_event_brief(brief: dict[str, object]) -> None:
     if registration_url:
         parsed = urlparse(registration_url)
         if parsed.scheme not in {"http", "https"} or not parsed.netloc:
-            errors.append("Invalid registration_url: use a full http:// or https:// URL.")
+            errors.append(
+                "Invalid registration_url: use a full http:// or https:// URL."
+            )
 
     channels = brief.get("channels")
     if channels is not None and (
@@ -107,16 +110,23 @@ def write_event_assets(brief: dict[str, object], output_dir: Path) -> list[Path]
     event_name = str(brief.get("event_name", "Event"))
     cta = str(brief.get("cta", "Register Now"))
     registration_url = str(brief.get("registration_url", "[url here]"))
+    local_tone = str(brief.get("tone", "Use the brand voice."))
+    brand_voice = load_brand_voice()
     source = brief_text(brief)
 
     assets = {
         "event-brief-summary.md": (
             f"# {event_name}\n\n"
             "## Source Brief\n\n"
-            f"{source}\n"
+            f"{source}\n\n"
+            "## Brand Voice\n\n"
+            f"{brand_voice}\n\n"
+            "## Local Event Tone\n\n"
+            f"{local_tone}\n"
         ),
         "email-sequence.md": (
             f"# Email Sequence: {event_name}\n\n"
+            f"Local tone: {local_tone}\n\n"
             "## Email 1\n\n"
             f"Subject: You're invited to {event_name}\n\n"
             f"Join us for {event_name}. {cta}: {registration_url}\n\n"
@@ -126,12 +136,15 @@ def write_event_assets(brief: dict[str, object], output_dir: Path) -> list[Path]
         ),
         "social-posts.md": (
             f"# Social Posts: {event_name}\n\n"
+            f"Local tone: {local_tone}\n\n"
             f"1. Join us for {event_name}. {cta}: {registration_url}\n"
-            f"2. Planning to attend {event_name}? Details and registration: {registration_url}\n"
+            f"2. Planning to attend {event_name}? Details and registration: "
+            f"{registration_url}\n"
             f"3. Last call for {event_name}. {cta}: {registration_url}\n"
         ),
         "landing-page-copy.md": (
             f"# Landing Page Copy: {event_name}\n\n"
+            f"Local tone: {local_tone}\n\n"
             f"## Hero\n\n{event_name}\n\n"
             f"## Primary CTA\n\n[{cta}]({registration_url})\n"
         ),

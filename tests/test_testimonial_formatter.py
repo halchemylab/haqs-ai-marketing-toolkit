@@ -95,6 +95,7 @@ class PromptAndFormattingTests(unittest.TestCase):
         self.assertIn("Never invent results", prompt)
         self.assertIn("Use only the supplied attribution verbatim", prompt)
         self.assertIn("Verified customer", prompt)
+        self.assertIn("Brand voice", prompt)
 
     def test_formats_all_output_files(self) -> None:
         outputs = format_content_pack(valid_response())

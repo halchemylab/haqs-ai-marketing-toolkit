@@ -7,8 +7,10 @@ from typing import Any
 
 from haqs_toolkit.utils.marketing import (
     AiGenerationError,
+    brand_voice_prompt_block,
     choose_option,
     generate_text,
+    load_brand_voice,
     log_roi_event,
     print_roi_logged,
     read_multiline,
@@ -16,7 +18,6 @@ from haqs_toolkit.utils.marketing import (
     save_text,
     welcome,
 )
-
 
 OUTPUT_COUNTS = {
     "short_quotes": 5,
@@ -110,9 +111,12 @@ def build_prompt(
     feedback: str,
     attribution: str,
     product_or_service: str,
+    brand_voice: str | None = None,
 ) -> str:
     product_context = product_or_service or "Not provided"
     return f"""
+{brand_voice_prompt_block(brand_voice)}
+
 Turn the customer feedback below into a reusable testimonial content pack.
 
 Return a valid JSON object only. Do not wrap it in Markdown. Use exactly this shape:
@@ -142,10 +146,11 @@ Accuracy and privacy rules:
 - Do not turn general praise into a quantified or guaranteed outcome.
 - For an absent case-study detail, write "Not provided".
 - Use only the supplied attribution verbatim. Do not infer identity details.
-- Shorten and lightly polish quotes, but do not materially change what the customer said.
+- Shorten and lightly polish quotes, but do not materially change what the
+  customer said.
 - The case-study fields and social-proof variations are paraphrased marketing copy, not
   direct quotations. Do not add quotation marks unless quoting faithful customer words.
-- Keep every item concise, professional, and ready for human review.
+- Local asset tone: concise, credible, careful, and ready for human review.
 
 Allowed attribution:
 {attribution}
@@ -160,14 +165,21 @@ Raw customer feedback:
 
 def _require_string(value: Any, field_name: str) -> str:
     if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"AI response field '{field_name}' must be a non-empty string.")
+        raise ValueError(
+            f"AI response field '{field_name}' must be a non-empty string."
+        )
     return value.strip()
 
 
 def _require_string_list(value: Any, field_name: str, count: int) -> list[str]:
     if not isinstance(value, list) or len(value) != count:
-        raise ValueError(f"AI response field '{field_name}' must contain {count} items.")
-    return [_require_string(item, f"{field_name}[{index}]") for index, item in enumerate(value)]
+        raise ValueError(
+            f"AI response field '{field_name}' must contain {count} items."
+        )
+    return [
+        _require_string(item, f"{field_name}[{index}]")
+        for index, item in enumerate(value)
+    ]
 
 
 def parse_testimonial_response(
@@ -187,15 +199,21 @@ def parse_testimonial_response(
     expected_keys = set(OUTPUT_COUNTS)
     missing_keys = expected_keys - set(parsed)
     if missing_keys:
-        raise ValueError(f"AI response was missing keys: {', '.join(sorted(missing_keys))}")
+        missing = ", ".join(sorted(missing_keys))
+        raise ValueError(f"AI response was missing keys: {missing}")
 
     raw_quotes = parsed["short_quotes"]
-    if not isinstance(raw_quotes, list) or len(raw_quotes) != OUTPUT_COUNTS["short_quotes"]:
+    if (
+        not isinstance(raw_quotes, list)
+        or len(raw_quotes) != OUTPUT_COUNTS["short_quotes"]
+    ):
         raise ValueError("AI response field 'short_quotes' must contain 5 items.")
     quotes = []
     for index, quote in enumerate(raw_quotes):
         if not isinstance(quote, dict):
-            raise ValueError(f"AI response field 'short_quotes[{index}]' must be an object.")
+            raise ValueError(
+                f"AI response field 'short_quotes[{index}]' must be an object."
+            )
         quote_text = _require_string(quote.get("text"), f"short_quotes[{index}].text")
         quote_attribution = _require_string(
             quote.get("attribution"), f"short_quotes[{index}].attribution"
@@ -263,7 +281,8 @@ def format_content_pack(content_pack: dict[str, Any]) -> dict[str, str]:
     website = content_pack["website_testimonial"]
     website_testimonial = f'“{website["text"]}”\n— {website["attribution"]}'
     callouts = "\n".join(
-        f"{index}. {item}" for index, item in enumerate(content_pack["callouts"], start=1)
+        f"{index}. {item}"
+        for index, item in enumerate(content_pack["callouts"], start=1)
     )
     return {
         "testimonial_quotes": quotes,
@@ -297,13 +316,17 @@ def main() -> None:
     )
 
     print("\nFormatting testimonial content...\n")
+    brand_voice = load_brand_voice()
     try:
         response_text = generate_text(
             system_prompt=(
-                "You are a precise testimonial editor. Preserve customer meaning, protect "
+                "You are a precise testimonial editor. Preserve customer "
+                "meaning, protect "
                 "privacy, and never invent or quantify claims."
             ),
-            user_prompt=build_prompt(feedback, attribution, product_or_service),
+            user_prompt=build_prompt(
+                feedback, attribution, product_or_service, brand_voice
+            ),
             text_format=TESTIMONIAL_PACK_SCHEMA,
         )
     except AiGenerationError as exc:

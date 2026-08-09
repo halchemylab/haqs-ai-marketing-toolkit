@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from haqs_toolkit.utils.marketing import (
     AiGenerationError,
+    brand_voice_prompt_block,
     generate_text,
+    load_brand_voice,
     log_roi_event,
     print_roi_logged,
     read_multiline,
@@ -14,8 +16,14 @@ from haqs_toolkit.utils.marketing import (
 )
 
 
-def build_prompt(source_content: str, purpose: str) -> str:
+def build_prompt(
+    source_content: str,
+    purpose: str,
+    brand_voice: str | None = None,
+) -> str:
     return f"""
+{brand_voice_prompt_block(brand_voice)}
+
 Create three different email drafts based on the source content below.
 
 Purpose of the email:
@@ -24,9 +32,10 @@ Purpose of the email:
 Requirements:
 - Each email must include a subject line and body.
 - Make each version meaningfully different in angle and wording.
-- Use a clear, professional marketing voice.
+- Local asset tone: clear, professional, useful, and appropriate for email.
 - Include the exact placeholder [url here] anywhere a link should be inserted.
-- Do not invent dates, speakers, prices, venues, or promises not present in the source text.
+- Do not invent dates, speakers, prices, venues, or promises not present in the
+  source text.
 - Separate the three emails with exactly this divider on its own line:
 =====
 - Return only the three email drafts.
@@ -45,11 +54,12 @@ def main() -> None:
 
     purpose = read_required("What is the purpose of the email? ")
     print("\nGenerating emails...\n")
+    brand_voice = load_brand_voice()
 
     try:
         emails = generate_text(
             system_prompt="You are a precise marketing email copywriter.",
-            user_prompt=build_prompt(source_content, purpose),
+            user_prompt=build_prompt(source_content, purpose, brand_voice),
         )
     except AiGenerationError as exc:
         print(f"Error: {exc}")
