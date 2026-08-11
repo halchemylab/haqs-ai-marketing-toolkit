@@ -69,6 +69,10 @@ def main() -> None:
 
     print()
     print(f"ROI log: {ROI_LOG_PATH}")
+    print(
+        "\nNext step: Use these totals in your reporting, then check the CSV if "
+        "you need the run-by-run details."
+    )
 
 
 if __name__ == "__main__":

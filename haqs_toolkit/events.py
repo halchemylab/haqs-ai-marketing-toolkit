@@ -216,6 +216,10 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Generated {len(paths)} event files:")
     for path in paths:
         print(f"- {path}")
+    print(
+        "\nNext step: Review the event brief summary first, then edit the "
+        "generated email, social, and landing page files before publishing."
+    )
     return 0
 
 

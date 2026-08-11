@@ -79,6 +79,10 @@ def main() -> None:
     print(emails)
     print(f"\nSaved to: {path}")
     print_roi_logged(roi)
+    print(
+        "\nNext step: Review the drafts, add final links, then paste the best "
+        "version into your email platform."
+    )
 
 
 if __name__ == "__main__":

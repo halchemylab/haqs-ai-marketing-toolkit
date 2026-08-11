@@ -151,6 +151,10 @@ def main() -> None:
         print(f"- {path}")
     print()
     print_roi_logged(combine_roi_results(roi_results))
+    print(
+        "\nNext step: Review the saved files, add final links where you see "
+        "[url here], then publish or schedule the strongest pieces."
+    )
 
 
 if __name__ == "__main__":

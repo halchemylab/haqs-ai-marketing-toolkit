@@ -71,6 +71,7 @@ def main() -> None:
     print(campaign_url)
     print(f"\nSaved to: {path}")
     print_roi_logged(roi)
+    print("\nNext step: Use this link in your ad, email, QR code, or social post.")
 
 
 if __name__ == "__main__":

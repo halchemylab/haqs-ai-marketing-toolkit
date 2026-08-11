@@ -46,6 +46,10 @@ def main() -> None:
     print("\nQR code saved to:")
     print(path)
     print_roi_logged(roi)
+    print(
+        "\nNext step: Test the QR code with a phone camera before using it in "
+        "print, signage, or campaign assets."
+    )
 
 
 if __name__ == "__main__":

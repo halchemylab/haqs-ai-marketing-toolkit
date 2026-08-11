@@ -282,6 +282,10 @@ def main() -> None:
     print(landing_page_copy)
     print(f"\nSaved to: {path}")
     print_roi_logged(roi)
+    print(
+        "\nNext step: Review the Markdown, choose the strongest headline and "
+        "CTA options, then paste the approved sections into your page builder."
+    )
 
 
 if __name__ == "__main__":

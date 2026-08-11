@@ -367,6 +367,10 @@ def main() -> None:
         print(f"- {path}")
     print()
     print_roi_logged(roi)
+    print(
+        "\nNext step: Review the quotes for accuracy and approval, then use the "
+        "best version on your website, proposal, or social proof section."
+    )
 
 
 if __name__ == "__main__":

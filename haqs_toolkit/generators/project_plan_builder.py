@@ -371,7 +371,10 @@ def main() -> None:
     print(f"Asana CSV: {asana_path}")
     print(f"Review plan: {readable_path}")
     print_roi_logged(roi)
-    print("\nTip: Adjust dates, assignees, or dependencies directly in the CSV before importing.")
+    print(
+        "\nNext step: Open the review Markdown first, then edit dates, "
+        "assignees, or dependencies in the CSV before importing."
+    )
 
 
 if __name__ == "__main__":
