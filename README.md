@@ -79,6 +79,17 @@ $env:HAQS_OUTPUT_DIR="custom-output"
 
 ## Scripts
 
+Generate a complete campaign packet from one brief:
+
+```powershell
+haqs-campaign --new campaigns/fall-workshop
+haqs-campaign campaigns/fall-workshop
+```
+
+The campaign packet workflow creates a starter `brief.json`, optional source
+notes, and review-ready outputs such as email drafts, social posts, landing page
+copy, a campaign URL, QR code, project plan, and `packet-index.md`.
+
 Generate a predictable event asset packet from `events/<event-slug>/brief.json`:
 
 ```powershell

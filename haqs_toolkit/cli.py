@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from haqs_toolkit import campaigns
 from haqs_toolkit.generators import (
     campaign_url_builder,
     content_repurposer,
@@ -25,6 +26,11 @@ class ToolOption:
 
 
 TOOL_OPTIONS = [
+    ToolOption(
+        "Campaign Packet Wizard",
+        "Generate a full campaign packet from one brief.",
+        campaigns.interactive_main,
+    ),
     ToolOption(
         "Campaign URL Builder",
         "Build a tracked URL with UTM parameters.",
