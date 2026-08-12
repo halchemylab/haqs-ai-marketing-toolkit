@@ -30,6 +30,22 @@ For local development, install the package in editable mode first:
 pip install -e .
 ```
 
+Use the main CLI for one-off assets. Use `haqs-campaign` when a reusable brief
+should produce a complete campaign packet. Use `haqs-event` when an event has a
+structured `events/<event-slug>/brief.json` packet.
+
+## Repository Layout
+
+```text
+brand_voice.txt             Global AI copy voice.
+haqs_toolkit/               Packaged commands, workflows, generators, helpers.
+haqs_toolkit/data/          Data templates loaded by packaged generators.
+events/                     Event packet briefs, inputs, and outputs.
+docs/                       Usage notes.
+tests/                      Unit tests.
+output/                     Ignored generated files and ROI logs.
+```
+
 ## Individual Generators
 
 Most generator modules are interactive and ask for input in the terminal.

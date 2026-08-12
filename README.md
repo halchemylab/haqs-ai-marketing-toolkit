@@ -9,13 +9,15 @@ reports.
 I usually open this repository folder in Codex and use the Codex chat as the
 main interface.
 
-Typical flow:
+Recommended daily flow:
 
 - Open Codex in this folder.
 - Describe the campaign, event, client task, or asset I need.
 - Ask Codex which script or workflow fits the job.
 - Let Codex run or update the scripts and organize the generated files.
 - Review the results under `output/`.
+- Move approved copy, URLs, QR codes, or plans into the final client or campaign
+  workspace.
 
 Useful Codex prompts:
 
@@ -24,6 +26,49 @@ Useful Codex prompts:
 - "Build UTM links for this campaign."
 - "Generate landing page copy from this offer."
 - "Show me the ROI report."
+
+## Choosing A Workflow
+
+Use a campaign packet when one brief should produce a full campaign set:
+
+```powershell
+haqs-campaign --new campaigns/fall-workshop
+haqs-campaign campaigns/fall-workshop
+```
+
+Use an event packet when the work starts from `events/<event-slug>/brief.json`
+and needs predictable review files:
+
+```powershell
+haqs-event events/demo-event
+```
+
+Use the interactive toolkit when you only need one asset, such as a UTM link,
+email draft, QR code, project plan, testimonial, or ROI report:
+
+```powershell
+haqs-toolkit
+```
+
+Use non-interactive flags for repeatable automation:
+
+```powershell
+python campaign_url_builder.py --landing-page-url https://example.com `
+  --source linkedin --medium social --campaign-name fall_launch
+```
+
+## File Structure
+
+```text
+brand_voice.txt             Editable global voice for AI copy.
+haqs_toolkit/               Packaged CLI, workflows, generators, and helpers.
+haqs_toolkit/data/          Packaged data templates used by generators.
+campaigns/                  Recommended home for reusable campaign packets.
+events/                     Event packet briefs, inputs, and outputs.
+docs/                       Usage notes and script guidance.
+tests/                      Unit tests for generators and shared helpers.
+output/                     Ignored generated assets and ROI logs.
+```
 
 ## Brand Voice
 
@@ -77,7 +122,7 @@ To save generated files somewhere else for the current PowerShell session:
 $env:HAQS_OUTPUT_DIR="custom-output"
 ```
 
-## Scripts
+## Commands
 
 The primary interface is the installed console commands:
 
