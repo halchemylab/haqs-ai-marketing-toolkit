@@ -32,14 +32,14 @@ def add_utm_parameters(
     if campaign_content:
         existing_query["utm_content"] = campaign_content
 
-    return urlunparse(
-        parsed._replace(query=urlencode(existing_query, doseq=True))
-    )
+    return urlunparse(parsed._replace(query=urlencode(existing_query, doseq=True)))
 
 
 def main() -> None:
     welcome("campaign URL building")
-    landing_page_url = read_url("Paste your full Landing Page URL, including https://: ")
+    landing_page_url = read_url(
+        "Paste your full Landing Page URL, including https://: "
+    )
     source = read_required(
         "Enter campaign source, e.g. google, medium, substack, linkedin, facebook: "
     )

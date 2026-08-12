@@ -122,9 +122,7 @@ def normalized_channels(brief: dict[str, object]) -> list[str]:
     if not isinstance(channels, list):
         return DEFAULT_CHANNELS
     return [
-        str(channel).strip().lower()
-        for channel in channels
-        if str(channel).strip()
+        str(channel).strip().lower() for channel in channels if str(channel).strip()
     ]
 
 
@@ -174,9 +172,12 @@ def build_campaign_url(brief: dict[str, object]) -> str:
     landing_page_url = str(brief["landing_page_url"]).strip()
     source = str(brief.get("utm_source") or "campaign").strip()
     medium = str(brief.get("utm_medium") or "marketing").strip()
-    campaign_name = str(
-        brief.get("utm_campaign") or brief["campaign_name"]
-    ).strip().lower().replace(" ", "_")
+    campaign_name = (
+        str(brief.get("utm_campaign") or brief["campaign_name"])
+        .strip()
+        .lower()
+        .replace(" ", "_")
+    )
     campaign_content = str(brief.get("utm_content") or "").strip()
     return campaign_url_builder.add_utm_parameters(
         landing_page_url=landing_page_url,

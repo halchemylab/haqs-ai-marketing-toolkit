@@ -265,7 +265,7 @@ def parse_testimonial_response(
 def format_content_pack(content_pack: dict[str, Any]) -> dict[str, str]:
     """Convert validated structured content into readable text files."""
     quotes = "\n\n".join(
-        f'{index}. “{quote["text"]}”\n— {quote["attribution"]}'
+        f"{index}. “{quote['text']}”\n— {quote['attribution']}"
         for index, quote in enumerate(content_pack["short_quotes"], start=1)
     )
     case = content_pack["case_study_snippet"]
@@ -279,7 +279,7 @@ def format_content_pack(content_pack: dict[str, Any]) -> dict[str, str]:
         for index, item in enumerate(content_pack["social_proof"], start=1)
     )
     website = content_pack["website_testimonial"]
-    website_testimonial = f'“{website["text"]}”\n— {website["attribution"]}'
+    website_testimonial = f"“{website['text']}”\n— {website['attribution']}"
     callouts = "\n".join(
         f"{index}. {item}"
         for index, item in enumerate(content_pack["callouts"], start=1)

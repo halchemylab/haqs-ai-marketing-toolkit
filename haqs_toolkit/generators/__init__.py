@@ -1,2 +1,1 @@
 """Marketing generator modules."""
-

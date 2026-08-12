@@ -239,9 +239,7 @@ def main() -> None:
     must_include = read_optional(
         "Anything that must be included? Optional, press Enter to skip: "
     )
-    avoid = read_optional(
-        "Anything to avoid saying? Optional, press Enter to skip: "
-    )
+    avoid = read_optional("Anything to avoid saying? Optional, press Enter to skip: ")
 
     print("\nGenerating landing page copy...\n")
     brand_voice = load_brand_voice()

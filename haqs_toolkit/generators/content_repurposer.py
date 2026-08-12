@@ -44,8 +44,7 @@ CONTENT_PACK_SCHEMA = {
     "schema": {
         "type": "object",
         "properties": {
-            key: {"type": "string", "minLength": 1}
-            for key in OUTPUT_FORMATS
+            key: {"type": "string", "minLength": 1} for key in OUTPUT_FORMATS
         },
         "required": list(OUTPUT_FORMATS),
         "additionalProperties": False,

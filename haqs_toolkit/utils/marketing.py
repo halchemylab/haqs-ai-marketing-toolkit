@@ -159,8 +159,10 @@ def timestamped_output_path(
     category: str | None = None,
 ) -> Path:
     now = datetime.now()
-    output_dir = OUTPUT_DIR / now.strftime("%Y-%m-%d") / (
-        category or output_category_for_prefix(prefix)
+    output_dir = (
+        OUTPUT_DIR
+        / now.strftime("%Y-%m-%d")
+        / (category or output_category_for_prefix(prefix))
     )
     output_dir.mkdir(parents=True, exist_ok=True)
     clean_extension = extension.lstrip(".")
@@ -211,8 +213,7 @@ def get_hourly_rate() -> float:
 
 def get_openai_model() -> str:
     return (
-        os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL).strip()
-        or DEFAULT_OPENAI_MODEL
+        os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL).strip() or DEFAULT_OPENAI_MODEL
     )
 
 
