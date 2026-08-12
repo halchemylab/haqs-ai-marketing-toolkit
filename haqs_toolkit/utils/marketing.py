@@ -153,6 +153,14 @@ def output_category_for_prefix(prefix: str) -> str:
     return "misc"
 
 
+def get_output_dir() -> Path:
+    return Path(os.getenv("HAQS_OUTPUT_DIR", DEFAULT_OUTPUT_DIR))
+
+
+def get_roi_log_path() -> Path:
+    return get_output_dir() / "roi" / "automation_roi.csv"
+
+
 def timestamped_output_path(
     prefix: str,
     extension: str = "txt",
@@ -160,7 +168,7 @@ def timestamped_output_path(
 ) -> Path:
     now = datetime.now()
     output_dir = (
-        OUTPUT_DIR
+        get_output_dir()
         / now.strftime("%Y-%m-%d")
         / (category or output_category_for_prefix(prefix))
     )
@@ -224,13 +232,14 @@ def log_roi_event(
     minutes_per_item: int,
     notes: str = "",
 ) -> RoiResult:
-    ROI_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    roi_log_path = get_roi_log_path()
+    roi_log_path.parent.mkdir(parents=True, exist_ok=True)
     hourly_rate = get_hourly_rate()
     time_saved_minutes = count * minutes_per_item
     money_saved = round((time_saved_minutes / 60) * hourly_rate, 2)
-    write_header = not ROI_LOG_PATH.exists()
+    write_header = not roi_log_path.exists()
 
-    with ROI_LOG_PATH.open("a", newline="", encoding="utf-8") as file:
+    with roi_log_path.open("a", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=ROI_FIELDNAMES)
         if write_header:
             writer.writeheader()
@@ -254,7 +263,7 @@ def log_roi_event(
         "time_saved_minutes": time_saved_minutes,
         "hourly_rate": hourly_rate,
         "money_saved": money_saved,
-        "path": ROI_LOG_PATH,
+        "path": roi_log_path,
     }
 
 
@@ -273,7 +282,7 @@ def combine_roi_results(results: list[RoiResult]) -> RoiResult:
             "time_saved_minutes": 0,
             "hourly_rate": get_hourly_rate(),
             "money_saved": 0.0,
-            "path": ROI_LOG_PATH,
+            "path": get_roi_log_path(),
         }
 
     return {

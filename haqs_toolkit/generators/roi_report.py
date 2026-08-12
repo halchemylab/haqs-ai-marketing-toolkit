@@ -7,7 +7,7 @@ import csv
 from collections import defaultdict
 from pathlib import Path
 
-from haqs_toolkit.utils.marketing import ROI_LOG_PATH, welcome
+from haqs_toolkit.utils.marketing import get_roi_log_path, welcome
 
 
 def read_roi_rows(path: Path) -> list[dict[str, str]]:
@@ -84,7 +84,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--log-path",
         type=Path,
-        default=ROI_LOG_PATH,
+        default=get_roi_log_path(),
         help="Path to the ROI CSV log.",
     )
     return parser

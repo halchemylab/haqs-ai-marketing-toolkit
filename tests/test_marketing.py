@@ -13,7 +13,7 @@ class MarketingRoiTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)
 
-            with patch.object(marketing, "OUTPUT_DIR", output_dir):
+            with patch.dict(os.environ, {"HAQS_OUTPUT_DIR": str(output_dir)}):
                 path = marketing.timestamped_output_path("campaign_url", "txt")
 
             self.assertEqual(path.parent.name, "campaign_urls")
@@ -26,14 +26,25 @@ class MarketingRoiTests(unittest.TestCase):
             self.assertEqual(path.suffix, ".txt")
             self.assertTrue(path.parent.exists())
 
+    def test_output_dir_is_read_from_environment_at_runtime(self):
+        with tempfile.TemporaryDirectory() as first_dir:
+            with tempfile.TemporaryDirectory() as second_dir:
+                with patch.dict(os.environ, {"HAQS_OUTPUT_DIR": first_dir}):
+                    first_path = marketing.timestamped_output_path("campaign_url")
+
+                with patch.dict(os.environ, {"HAQS_OUTPUT_DIR": second_dir}):
+                    second_path = marketing.timestamped_output_path("campaign_url")
+
+        self.assertEqual(first_path.parent.parent.parent, Path(first_dir))
+        self.assertEqual(second_path.parent.parent.parent, Path(second_dir))
+
     def test_log_roi_event_returns_calculated_totals_and_writes_row(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)
             roi_path = output_dir / "roi" / "automation_roi.csv"
 
             with (
-                patch.object(marketing, "OUTPUT_DIR", output_dir),
-                patch.object(marketing, "ROI_LOG_PATH", roi_path),
+                patch.dict(os.environ, {"HAQS_OUTPUT_DIR": str(output_dir)}),
                 patch.dict(os.environ, {"HOURLY_RATE": "75"}),
             ):
                 roi = marketing.log_roi_event(
