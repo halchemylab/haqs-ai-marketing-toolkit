@@ -5,6 +5,7 @@ from tempfile import TemporaryDirectory
 
 from project_plan_builder import (
     ASANA_FIELDNAMES,
+    CAMPAIGN_TEMPLATES,
     PROJECT_PLAN_FIELDNAMES,
     add_business_days,
     asana_rows,
@@ -79,6 +80,10 @@ class ProjectPlanBuilderTests(unittest.TestCase):
     def test_asana_fieldnames_do_not_depend_on_export_rows(self):
         self.assertEqual(asana_rows([]), [])
         self.assertIn("Section/Column", ASANA_FIELDNAMES)
+
+    def test_project_plan_templates_load_from_package_data(self):
+        self.assertIn("product_launch", CAMPAIGN_TEMPLATES)
+        self.assertGreater(len(CAMPAIGN_TEMPLATES["product_launch"]), 0)
 
 
 if __name__ == "__main__":

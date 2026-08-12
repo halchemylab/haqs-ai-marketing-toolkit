@@ -27,11 +27,15 @@ py-modules = [
     "testimonial_formatter",
 ]
 packages = [
+    "haqs_toolkit.data",
     "haqs_toolkit",
     "haqs_toolkit.generators",
     "haqs_toolkit.utils",
     "utils",
 ]
+
+[tool.setuptools.package-data]
+"haqs_toolkit.data" = ["*.json"]
 
 [project.scripts]
 haqs-toolkit = "haqs_toolkit.cli:main"

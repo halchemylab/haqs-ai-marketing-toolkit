@@ -1,0 +1,914 @@
+{
+  "product_launch": [
+    {
+      "name": "Finalize launch brief",
+      "description": "Confirm offer, audience, goals, core message, budget, and success metrics.",
+      "section": "Strategy",
+      "owner_role": "Strategy",
+      "due_offset": -30,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "",
+      "tags": [
+        "brief"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Approve launch timeline",
+      "description": "Review milestones, owners, dependencies, and launch-day responsibilities.",
+      "section": "Strategy",
+      "owner_role": "Marketing Ops",
+      "due_offset": -28,
+      "duration_days": 1,
+      "priority": "High",
+      "depends_on": "Finalize launch brief",
+      "tags": [],
+      "channels": []
+    },
+    {
+      "name": "Write landing page copy",
+      "description": "Draft hero, value props, proof points, FAQs, and primary CTA.",
+      "section": "Copy",
+      "owner_role": "Copy",
+      "due_offset": -24,
+      "duration_days": 4,
+      "priority": "High",
+      "depends_on": "Finalize launch brief",
+      "tags": [
+        "landing-page"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Review landing page copy",
+      "description": "Collect stakeholder feedback and resolve copy edits before design starts.",
+      "section": "Review",
+      "owner_role": "Strategy",
+      "due_offset": -20,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "Write landing page copy",
+      "tags": [
+        "buffer",
+        "review"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Design landing page",
+      "description": "Create desktop and mobile designs for the campaign landing page.",
+      "section": "Design",
+      "owner_role": "Design",
+      "due_offset": -17,
+      "duration_days": 4,
+      "priority": "High",
+      "depends_on": "Review landing page copy",
+      "tags": [
+        "landing-page"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Build landing page",
+      "description": "Build, connect forms, add tracking, and prepare QA checklist.",
+      "section": "Production",
+      "owner_role": "Marketing Ops",
+      "due_offset": -12,
+      "duration_days": 4,
+      "priority": "High",
+      "depends_on": "Design landing page",
+      "tags": [
+        "landing-page"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Draft launch email",
+      "description": "Write launch email copy with subject line options and CTA.",
+      "section": "Copy",
+      "owner_role": "Copy",
+      "due_offset": -14,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "Finalize launch brief",
+      "tags": [
+        "email"
+      ],
+      "channels": [
+        "email"
+      ]
+    },
+    {
+      "name": "Build launch email",
+      "description": "Load the approved email into the email platform and confirm links.",
+      "section": "Production",
+      "owner_role": "Marketing Ops",
+      "due_offset": -9,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "Draft launch email",
+      "tags": [
+        "email"
+      ],
+      "channels": [
+        "email"
+      ]
+    },
+    {
+      "name": "Create social launch posts",
+      "description": "Draft launch posts and supporting variations for selected social channels.",
+      "section": "Copy",
+      "owner_role": "Copy",
+      "due_offset": -12,
+      "duration_days": 3,
+      "priority": "Medium",
+      "depends_on": "Finalize launch brief",
+      "tags": [
+        "social"
+      ],
+      "channels": [
+        "linkedin",
+        "facebook",
+        "x",
+        "instagram"
+      ]
+    },
+    {
+      "name": "Design social assets",
+      "description": "Create channel-ready graphics and thumbnails for social launch posts.",
+      "section": "Design",
+      "owner_role": "Design",
+      "due_offset": -8,
+      "duration_days": 3,
+      "priority": "Medium",
+      "depends_on": "Create social launch posts",
+      "tags": [
+        "social"
+      ],
+      "channels": [
+        "linkedin",
+        "facebook",
+        "x",
+        "instagram"
+      ]
+    },
+    {
+      "name": "Create paid ad variants",
+      "description": "Draft ad copy variants and map each to target audience and offer angle.",
+      "section": "Paid Media",
+      "owner_role": "Paid Media",
+      "due_offset": -11,
+      "duration_days": 3,
+      "priority": "Medium",
+      "depends_on": "Finalize launch brief",
+      "tags": [
+        "ads"
+      ],
+      "channels": [
+        "paid_social",
+        "google_ads",
+        "linkedin_ads"
+      ]
+    },
+    {
+      "name": "Build paid campaigns",
+      "description": "Set targeting, budgets, creative, URLs, and conversion tracking.",
+      "section": "Paid Media",
+      "owner_role": "Paid Media",
+      "due_offset": -6,
+      "duration_days": 3,
+      "priority": "High",
+      "depends_on": "Create paid ad variants",
+      "tags": [
+        "ads"
+      ],
+      "channels": [
+        "paid_social",
+        "google_ads",
+        "linkedin_ads"
+      ]
+    },
+    {
+      "name": "QA launch assets",
+      "description": "Check landing page, forms, emails, URLs, UTMs, ads, and mobile rendering.",
+      "section": "QA",
+      "owner_role": "Marketing Ops",
+      "due_offset": -4,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "Build landing page",
+      "tags": [
+        "qa",
+        "buffer"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Final launch approval",
+      "description": "Confirm go/no-go with stakeholders after QA fixes are complete.",
+      "section": "Launch",
+      "owner_role": "Strategy",
+      "due_offset": -2,
+      "duration_days": 1,
+      "priority": "High",
+      "depends_on": "QA launch assets",
+      "tags": [
+        "approval",
+        "buffer"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Launch campaign",
+      "description": "Publish campaign assets and verify tracking after launch.",
+      "section": "Launch",
+      "owner_role": "Marketing Ops",
+      "due_offset": 0,
+      "duration_days": 1,
+      "priority": "High",
+      "depends_on": "Final launch approval",
+      "tags": [
+        "launch"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Post-launch performance check",
+      "description": "Review early data, conversion paths, and urgent optimization needs.",
+      "section": "Reporting",
+      "owner_role": "Marketing Ops",
+      "due_offset": 3,
+      "duration_days": 1,
+      "priority": "Medium",
+      "depends_on": "Launch campaign",
+      "tags": [
+        "reporting"
+      ],
+      "channels": []
+    },
+    {
+      "name": "First optimization pass",
+      "description": "Adjust copy, budgets, creative, or audience settings based on early results.",
+      "section": "Optimization",
+      "owner_role": "Marketing Ops",
+      "due_offset": 7,
+      "duration_days": 1,
+      "priority": "Medium",
+      "depends_on": "Post-launch performance check",
+      "tags": [
+        "optimization"
+      ],
+      "channels": []
+    }
+  ],
+  "webinar": [
+    {
+      "name": "Finalize webinar brief",
+      "description": "Confirm topic, audience, speakers, CTA, registration goal, and follow-up offer.",
+      "section": "Strategy",
+      "owner_role": "Strategy",
+      "due_offset": -28,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "",
+      "tags": [
+        "brief"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Confirm speaker details",
+      "description": "Collect speaker bios, headshots, talking points, and availability.",
+      "section": "Strategy",
+      "owner_role": "Marketing Ops",
+      "due_offset": -25,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "Finalize webinar brief",
+      "tags": [],
+      "channels": []
+    },
+    {
+      "name": "Write registration page copy",
+      "description": "Draft webinar title, abstract, speaker section, and registration CTA.",
+      "section": "Copy",
+      "owner_role": "Copy",
+      "due_offset": -23,
+      "duration_days": 3,
+      "priority": "High",
+      "depends_on": "Finalize webinar brief",
+      "tags": [
+        "landing-page"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Build registration page",
+      "description": "Create page, connect form, confirmation message, and tracking.",
+      "section": "Production",
+      "owner_role": "Marketing Ops",
+      "due_offset": -18,
+      "duration_days": 3,
+      "priority": "High",
+      "depends_on": "Write registration page copy",
+      "tags": [
+        "landing-page"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Create promotional email sequence",
+      "description": "Draft invite, reminder, last-chance, and post-event follow-up emails.",
+      "section": "Copy",
+      "owner_role": "Copy",
+      "due_offset": -17,
+      "duration_days": 4,
+      "priority": "High",
+      "depends_on": "Finalize webinar brief",
+      "tags": [
+        "email"
+      ],
+      "channels": [
+        "email"
+      ]
+    },
+    {
+      "name": "Build promotional emails",
+      "description": "Load emails, test links, and schedule sends.",
+      "section": "Production",
+      "owner_role": "Marketing Ops",
+      "due_offset": -11,
+      "duration_days": 3,
+      "priority": "High",
+      "depends_on": "Create promotional email sequence",
+      "tags": [
+        "email"
+      ],
+      "channels": [
+        "email"
+      ]
+    },
+    {
+      "name": "Create social promo posts",
+      "description": "Draft social posts for announcement, reminders, and final call.",
+      "section": "Copy",
+      "owner_role": "Copy",
+      "due_offset": -15,
+      "duration_days": 3,
+      "priority": "Medium",
+      "depends_on": "Finalize webinar brief",
+      "tags": [
+        "social"
+      ],
+      "channels": [
+        "linkedin",
+        "facebook",
+        "x",
+        "instagram"
+      ]
+    },
+    {
+      "name": "Design promo assets",
+      "description": "Create speaker graphic, event banner, and social assets.",
+      "section": "Design",
+      "owner_role": "Design",
+      "due_offset": -12,
+      "duration_days": 3,
+      "priority": "Medium",
+      "depends_on": "Create social promo posts",
+      "tags": [
+        "design"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Set up webinar platform",
+      "description": "Configure event, registration integration, reminders, recording, and attendee settings.",
+      "section": "Production",
+      "owner_role": "Marketing Ops",
+      "due_offset": -10,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "Confirm speaker details",
+      "tags": [],
+      "channels": []
+    },
+    {
+      "name": "Run technical rehearsal",
+      "description": "Confirm speaker audio, slides, screen share, recording, and event flow.",
+      "section": "QA",
+      "owner_role": "Marketing Ops",
+      "due_offset": -5,
+      "duration_days": 1,
+      "priority": "High",
+      "depends_on": "Set up webinar platform",
+      "tags": [
+        "qa",
+        "buffer"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Final promotion check",
+      "description": "Review registrations, scheduled sends, social posts, and paid support.",
+      "section": "Launch",
+      "owner_role": "Marketing Ops",
+      "due_offset": -3,
+      "duration_days": 1,
+      "priority": "High",
+      "depends_on": "Run technical rehearsal",
+      "tags": [
+        "buffer"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Host webinar",
+      "description": "Run the live event and capture recording assets.",
+      "section": "Launch",
+      "owner_role": "Marketing Ops",
+      "due_offset": 0,
+      "duration_days": 1,
+      "priority": "High",
+      "depends_on": "Final promotion check",
+      "tags": [
+        "event"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Send follow-up email",
+      "description": "Send recording, offer, and next-step CTA to attendees and no-shows.",
+      "section": "Follow-up",
+      "owner_role": "Marketing Ops",
+      "due_offset": 1,
+      "duration_days": 1,
+      "priority": "High",
+      "depends_on": "Host webinar",
+      "tags": [
+        "follow-up"
+      ],
+      "channels": [
+        "email"
+      ]
+    },
+    {
+      "name": "Publish webinar recap",
+      "description": "Create a recap post or short summary asset from the webinar.",
+      "section": "Follow-up",
+      "owner_role": "Copy",
+      "due_offset": 4,
+      "duration_days": 2,
+      "priority": "Medium",
+      "depends_on": "Host webinar",
+      "tags": [
+        "content"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Report webinar performance",
+      "description": "Summarize registrations, attendance, engagement, conversions, and next actions.",
+      "section": "Reporting",
+      "owner_role": "Marketing Ops",
+      "due_offset": 7,
+      "duration_days": 1,
+      "priority": "Medium",
+      "depends_on": "Send follow-up email",
+      "tags": [
+        "reporting"
+      ],
+      "channels": []
+    }
+  ],
+  "email_campaign": [
+    {
+      "name": "Finalize email campaign brief",
+      "description": "Confirm audience, offer, segment, CTA, timing, and success metrics.",
+      "section": "Strategy",
+      "owner_role": "Strategy",
+      "due_offset": -14,
+      "duration_days": 1,
+      "priority": "High",
+      "depends_on": "",
+      "tags": [
+        "brief"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Draft email copy",
+      "description": "Write email body, subject line options, preview text, and CTA.",
+      "section": "Copy",
+      "owner_role": "Copy",
+      "due_offset": -11,
+      "duration_days": 3,
+      "priority": "High",
+      "depends_on": "Finalize email campaign brief",
+      "tags": [
+        "email"
+      ],
+      "channels": [
+        "email"
+      ]
+    },
+    {
+      "name": "Review email copy",
+      "description": "Collect edits, confirm offer details, and approve final copy.",
+      "section": "Review",
+      "owner_role": "Strategy",
+      "due_offset": -8,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "Draft email copy",
+      "tags": [
+        "review",
+        "buffer"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Build email",
+      "description": "Load email into the platform, add links, UTMs, personalization, and tracking.",
+      "section": "Production",
+      "owner_role": "Marketing Ops",
+      "due_offset": -5,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "Review email copy",
+      "tags": [
+        "email"
+      ],
+      "channels": [
+        "email"
+      ]
+    },
+    {
+      "name": "QA email",
+      "description": "Send test emails, check rendering, proof links, and validate list rules.",
+      "section": "QA",
+      "owner_role": "Marketing Ops",
+      "due_offset": -3,
+      "duration_days": 1,
+      "priority": "High",
+      "depends_on": "Build email",
+      "tags": [
+        "qa",
+        "buffer"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Schedule email",
+      "description": "Schedule the approved send and confirm suppression/exclusion rules.",
+      "section": "Launch",
+      "owner_role": "Marketing Ops",
+      "due_offset": -1,
+      "duration_days": 1,
+      "priority": "High",
+      "depends_on": "QA email",
+      "tags": [
+        "launch"
+      ],
+      "channels": [
+        "email"
+      ]
+    },
+    {
+      "name": "Send email",
+      "description": "Send or monitor the scheduled campaign.",
+      "section": "Launch",
+      "owner_role": "Marketing Ops",
+      "due_offset": 0,
+      "duration_days": 1,
+      "priority": "High",
+      "depends_on": "Schedule email",
+      "tags": [
+        "launch"
+      ],
+      "channels": [
+        "email"
+      ]
+    },
+    {
+      "name": "Review email performance",
+      "description": "Check opens, clicks, conversions, unsubscribes, and recommended follow-up.",
+      "section": "Reporting",
+      "owner_role": "Marketing Ops",
+      "due_offset": 3,
+      "duration_days": 1,
+      "priority": "Medium",
+      "depends_on": "Send email",
+      "tags": [
+        "reporting"
+      ],
+      "channels": []
+    }
+  ],
+  "paid_ads_campaign": [
+    {
+      "name": "Finalize paid campaign brief",
+      "description": "Confirm offer, objective, target audience, budget, channels, and conversion goal.",
+      "section": "Strategy",
+      "owner_role": "Strategy",
+      "due_offset": -21,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "",
+      "tags": [
+        "brief"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Confirm tracking plan",
+      "description": "Define UTMs, conversion events, pixels, and reporting views.",
+      "section": "Measurement",
+      "owner_role": "Marketing Ops",
+      "due_offset": -18,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "Finalize paid campaign brief",
+      "tags": [
+        "tracking"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Draft ad copy variants",
+      "description": "Create headline, body, description, and CTA variants by audience angle.",
+      "section": "Copy",
+      "owner_role": "Copy",
+      "due_offset": -16,
+      "duration_days": 3,
+      "priority": "High",
+      "depends_on": "Finalize paid campaign brief",
+      "tags": [
+        "ads"
+      ],
+      "channels": [
+        "paid_social",
+        "google_ads",
+        "linkedin_ads"
+      ]
+    },
+    {
+      "name": "Design ad creative",
+      "description": "Create ad graphics or video cutdowns for selected placements.",
+      "section": "Design",
+      "owner_role": "Design",
+      "due_offset": -13,
+      "duration_days": 4,
+      "priority": "High",
+      "depends_on": "Draft ad copy variants",
+      "tags": [
+        "ads"
+      ],
+      "channels": [
+        "paid_social",
+        "linkedin_ads"
+      ]
+    },
+    {
+      "name": "Review ads",
+      "description": "Approve copy, creative, claims, landing page, and budget before buildout.",
+      "section": "Review",
+      "owner_role": "Strategy",
+      "due_offset": -8,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "Design ad creative",
+      "tags": [
+        "review",
+        "buffer"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Build campaign in ad platforms",
+      "description": "Set campaign structure, audience, placements, budgets, creative, and URLs.",
+      "section": "Production",
+      "owner_role": "Paid Media",
+      "due_offset": -5,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "Review ads",
+      "tags": [
+        "ads"
+      ],
+      "channels": [
+        "paid_social",
+        "google_ads",
+        "linkedin_ads"
+      ]
+    },
+    {
+      "name": "QA campaign setup",
+      "description": "Check URLs, tracking, budget pacing, audience exclusions, and creative previews.",
+      "section": "QA",
+      "owner_role": "Paid Media",
+      "due_offset": -3,
+      "duration_days": 1,
+      "priority": "High",
+      "depends_on": "Build campaign in ad platforms",
+      "tags": [
+        "qa",
+        "buffer"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Launch paid campaign",
+      "description": "Publish ads and verify delivery, tracking, and spend.",
+      "section": "Launch",
+      "owner_role": "Paid Media",
+      "due_offset": 0,
+      "duration_days": 1,
+      "priority": "High",
+      "depends_on": "QA campaign setup",
+      "tags": [
+        "launch"
+      ],
+      "channels": []
+    },
+    {
+      "name": "First performance review",
+      "description": "Review spend, CTR, CPC, conversions, and initial optimization needs.",
+      "section": "Reporting",
+      "owner_role": "Paid Media",
+      "due_offset": 3,
+      "duration_days": 1,
+      "priority": "Medium",
+      "depends_on": "Launch paid campaign",
+      "tags": [
+        "reporting"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Optimize campaign",
+      "description": "Adjust budget, bids, audiences, creative, and low-performing variants.",
+      "section": "Optimization",
+      "owner_role": "Paid Media",
+      "due_offset": 7,
+      "duration_days": 1,
+      "priority": "Medium",
+      "depends_on": "First performance review",
+      "tags": [
+        "optimization"
+      ],
+      "channels": []
+    }
+  ],
+  "content_campaign": [
+    {
+      "name": "Finalize content campaign brief",
+      "description": "Confirm theme, audience, channels, primary CTA, and publishing cadence.",
+      "section": "Strategy",
+      "owner_role": "Strategy",
+      "due_offset": -21,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "",
+      "tags": [
+        "brief"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Create content outline",
+      "description": "Draft structure, key points, proof, and distribution hooks.",
+      "section": "Copy",
+      "owner_role": "Copy",
+      "due_offset": -18,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "Finalize content campaign brief",
+      "tags": [
+        "content"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Draft core content asset",
+      "description": "Write the main article, guide, newsletter, or campaign asset.",
+      "section": "Copy",
+      "owner_role": "Copy",
+      "due_offset": -15,
+      "duration_days": 4,
+      "priority": "High",
+      "depends_on": "Create content outline",
+      "tags": [
+        "content"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Review core content asset",
+      "description": "Collect edits and approve the asset before design or publishing.",
+      "section": "Review",
+      "owner_role": "Strategy",
+      "due_offset": -10,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "Draft core content asset",
+      "tags": [
+        "review",
+        "buffer"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Create supporting visuals",
+      "description": "Design graphics, thumbnails, charts, or downloadable assets as needed.",
+      "section": "Design",
+      "owner_role": "Design",
+      "due_offset": -7,
+      "duration_days": 3,
+      "priority": "Medium",
+      "depends_on": "Review core content asset",
+      "tags": [
+        "design"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Repurpose into channel posts",
+      "description": "Create social, newsletter, and short-form versions from the core asset.",
+      "section": "Copy",
+      "owner_role": "Copy",
+      "due_offset": -6,
+      "duration_days": 3,
+      "priority": "Medium",
+      "depends_on": "Review core content asset",
+      "tags": [
+        "repurpose"
+      ],
+      "channels": [
+        "email",
+        "linkedin",
+        "facebook",
+        "x",
+        "instagram"
+      ]
+    },
+    {
+      "name": "Prepare publishing setup",
+      "description": "Load content, format page, check links, add UTMs, and prepare metadata.",
+      "section": "Production",
+      "owner_role": "Marketing Ops",
+      "due_offset": -3,
+      "duration_days": 2,
+      "priority": "High",
+      "depends_on": "Create supporting visuals",
+      "tags": [
+        "production"
+      ],
+      "channels": []
+    },
+    {
+      "name": "QA publishing setup",
+      "description": "Review formatting, links, mobile view, metadata, and tracking.",
+      "section": "QA",
+      "owner_role": "Marketing Ops",
+      "due_offset": -1,
+      "duration_days": 1,
+      "priority": "High",
+      "depends_on": "Prepare publishing setup",
+      "tags": [
+        "qa",
+        "buffer"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Publish content campaign",
+      "description": "Publish the content and distribute through selected channels.",
+      "section": "Launch",
+      "owner_role": "Marketing Ops",
+      "due_offset": 0,
+      "duration_days": 1,
+      "priority": "High",
+      "depends_on": "QA publishing setup",
+      "tags": [
+        "launch"
+      ],
+      "channels": []
+    },
+    {
+      "name": "Review content performance",
+      "description": "Check traffic, engagement, conversions, and recommended repromotion opportunities.",
+      "section": "Reporting",
+      "owner_role": "Marketing Ops",
+      "due_offset": 7,
+      "duration_days": 1,
+      "priority": "Medium",
+      "depends_on": "Publish content campaign",
+      "tags": [
+        "reporting"
+      ],
+      "channels": []
+    }
+  ]
+}
