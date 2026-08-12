@@ -51,6 +51,21 @@ but prefer console commands and package modules for new workflows.
 | `qr_code_generator.py` | Generate a QR code PNG from a URL. | No |
 | `roi_report.py` | Summarize tracked automation ROI. | No |
 
+Several operational tools also support non-interactive flags:
+
+```powershell
+python campaign_url_builder.py --landing-page-url https://example.com `
+  --source linkedin --medium social --campaign-name fall_launch
+
+python qr_code_generator.py --link https://example.com
+
+python project_plan_builder.py --campaign-name "Fall Launch" `
+  --campaign-type email_campaign --launch-date 2026-09-15 `
+  --channels email,linkedin --team Sam=Copy
+
+python roi_report.py --log-path output/roi/automation_roi.csv
+```
+
 ## Expected Outputs
 
 AI copy generators save text or Markdown files. Operational tools save CSV, PNG,

@@ -1,6 +1,6 @@
 import unittest
 
-from campaign_url_builder import add_utm_parameters
+from campaign_url_builder import add_utm_parameters, build_parser
 
 
 class CampaignUrlBuilderTests(unittest.TestCase):
@@ -61,6 +61,23 @@ class CampaignUrlBuilderTests(unittest.TestCase):
                 campaign_name="summer_launch",
                 campaign_content="",
             )
+
+    def test_parser_accepts_non_interactive_url_inputs(self):
+        args = build_parser().parse_args(
+            [
+                "--landing-page-url",
+                "https://example.com/page",
+                "--source",
+                "linkedin",
+                "--medium",
+                "social",
+                "--campaign-name",
+                "summer_launch",
+            ]
+        )
+
+        self.assertEqual(args.source, "linkedin")
+        self.assertEqual(args.campaign_name, "summer_launch")
 
 
 if __name__ == "__main__":

@@ -9,7 +9,9 @@ from project_plan_builder import (
     PROJECT_PLAN_FIELDNAMES,
     add_business_days,
     asana_rows,
+    build_parser,
     build_rows,
+    cli_inputs,
     parse_channels,
     parse_date,
     parse_team,
@@ -84,6 +86,37 @@ class ProjectPlanBuilderTests(unittest.TestCase):
     def test_project_plan_templates_load_from_package_data(self):
         self.assertIn("product_launch", CAMPAIGN_TEMPLATES)
         self.assertGreater(len(CAMPAIGN_TEMPLATES["product_launch"]), 0)
+
+    def test_cli_inputs_parse_non_interactive_project_plan_args(self):
+        parser = build_parser()
+        args = parser.parse_args(
+            [
+                "--campaign-name",
+                "Fall Launch",
+                "--campaign-type",
+                "email_campaign",
+                "--launch-date",
+                "2026-09-15",
+                "--channels",
+                "email,linkedin",
+                "--team",
+                "Sam=Copy",
+                "--buffer-days",
+                "3",
+            ]
+        )
+
+        self.assertEqual(
+            cli_inputs(parser, args),
+            (
+                "Fall Launch",
+                "email_campaign",
+                date(2026, 9, 15),
+                {"email", "linkedin"},
+                {"copy": "Sam"},
+                3,
+            ),
+        )
 
 
 if __name__ == "__main__":

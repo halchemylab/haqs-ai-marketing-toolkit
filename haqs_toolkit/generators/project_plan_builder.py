@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 from dataclasses import dataclass
@@ -276,8 +277,66 @@ def read_buffer_days() -> int:
         return 2
 
 
-def main() -> None:
-    welcome("marketing project plan building")
+def generate_project_plan(
+    campaign_name: str,
+    campaign_type: str,
+    launch_date: date,
+    channels: set[str],
+    team: dict[str, str],
+    buffer_days: int,
+) -> tuple[list[dict[str, str]], Path, Path, Path]:
+    rows = build_rows(
+        campaign_name=campaign_name,
+        launch_date=launch_date,
+        campaign_type=campaign_type,
+        selected_channels=channels,
+        team=team,
+        buffer_days=buffer_days,
+    )
+
+    generic_path = timestamped_output_path("project_plan", "csv")
+    write_csv(generic_path, rows, PROJECT_PLAN_FIELDNAMES)
+
+    asana_path = timestamped_output_path("project_plan_asana", "csv")
+    asana_export = asana_rows(rows)
+    write_csv(asana_path, asana_export, ASANA_FIELDNAMES)
+
+    readable_path = timestamped_output_path("project_plan_review", "md")
+    write_readable_plan(readable_path, campaign_name, rows)
+    return rows, generic_path, asana_path, readable_path
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Build campaign project plan CSV and Markdown files."
+    )
+    parser.add_argument("--campaign-name", help="Campaign or project name.")
+    parser.add_argument(
+        "--campaign-type",
+        choices=sorted(CAMPAIGN_TEMPLATES),
+        help="Template type to use.",
+    )
+    parser.add_argument("--launch-date", help="Launch date in YYYY-MM-DD format.")
+    parser.add_argument(
+        "--channels",
+        default="",
+        help="Comma-separated channels, such as email,linkedin,paid_social.",
+    )
+    parser.add_argument(
+        "--team",
+        default="",
+        help="Comma-separated role mapping, such as Alex=Strategy,Sam=Copy.",
+    )
+    parser.add_argument(
+        "--buffer-days",
+        type=int,
+        default=2,
+        help="Business-day buffer before pre-launch due dates.",
+    )
+    return parser
+
+
+def read_interactive_inputs() -> tuple[str, str, date, set[str], dict[str, str], int]:
     campaign_name = read_required("Campaign/project name: ")
     campaign_type = choose_campaign_type()
 
@@ -302,26 +361,59 @@ def main() -> None:
             "Team mapping, comma-separated like Alex=Strategy, Sam=Copy (optional): "
         )
     )
-    buffer_days = read_buffer_days()
+    return campaign_name, campaign_type, launch_date, channels, team, read_buffer_days()
 
-    rows = build_rows(
+
+def cli_inputs(
+    parser: argparse.ArgumentParser, args: argparse.Namespace
+) -> tuple[str, str, date, set[str], dict[str, str], int] | None:
+    has_cli_input = any([args.campaign_name, args.campaign_type, args.launch_date])
+    if not has_cli_input:
+        return None
+
+    missing = [
+        name
+        for name, value in {
+            "--campaign-name": args.campaign_name,
+            "--campaign-type": args.campaign_type,
+            "--launch-date": args.launch_date,
+        }.items()
+        if not value
+    ]
+    if missing:
+        parser.error(f"missing required arguments: {', '.join(missing)}")
+
+    return (
+        args.campaign_name,
+        args.campaign_type,
+        parse_date(args.launch_date),
+        parse_channels(args.channels) or {"email", "linkedin"},
+        parse_team(args.team),
+        max(0, args.buffer_days),
+    )
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    welcome("marketing project plan building")
+    (
+        campaign_name,
+        campaign_type,
+        launch_date,
+        channels,
+        team,
+        buffer_days,
+    ) = cli_inputs(parser, args) or read_interactive_inputs()
+
+    rows, generic_path, asana_path, readable_path = generate_project_plan(
         campaign_name=campaign_name,
-        launch_date=launch_date,
         campaign_type=campaign_type,
-        selected_channels=channels,
+        launch_date=launch_date,
+        channels=channels,
         team=team,
         buffer_days=buffer_days,
     )
-
-    generic_path = timestamped_output_path("project_plan", "csv")
-    write_csv(generic_path, rows, PROJECT_PLAN_FIELDNAMES)
-
-    asana_path = timestamped_output_path("project_plan_asana", "csv")
-    asana_export = asana_rows(rows)
-    write_csv(asana_path, asana_export, ASANA_FIELDNAMES)
-
-    readable_path = timestamped_output_path("project_plan_review", "md")
-    write_readable_plan(readable_path, campaign_name, rows)
 
     minutes_saved = 45
     roi = log_roi_event(

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 from collections import defaultdict
 from pathlib import Path
@@ -31,12 +32,9 @@ def as_float(value: str) -> float:
         return 0.0
 
 
-def main() -> None:
-    welcome("automation ROI reporting")
-    rows = read_roi_rows(ROI_LOG_PATH)
+def build_report(rows: list[dict[str, str]], path: Path) -> str:
     if not rows:
-        print("No ROI log found yet. Run one of the generator scripts first.")
-        return
+        return "No ROI log found yet. Run one of the generator scripts first."
 
     total_runs = len(rows)
     total_assets = sum(as_int(row.get("count", "")) for row in rows)
@@ -53,26 +51,49 @@ def main() -> None:
         by_asset[asset_type]["minutes"] += as_int(row.get("time_saved_minutes", ""))
         by_asset[asset_type]["money"] += as_float(row.get("money_saved", ""))
 
-    print(f"Total logged runs: {total_runs}")
-    print(f"Total generated assets: {total_assets}")
-    print(f"Total time saved: {total_minutes / 60:.2f} hours")
-    print(f"Estimated money saved: ${total_money:.2f}")
-    print()
-    print("Breakdown by asset type:")
+    lines = [
+        f"Total logged runs: {total_runs}",
+        f"Total generated assets: {total_assets}",
+        f"Total time saved: {total_minutes / 60:.2f} hours",
+        f"Estimated money saved: ${total_money:.2f}",
+        "",
+        "Breakdown by asset type:",
+    ]
 
     for asset_type, totals in sorted(by_asset.items()):
-        print(
+        lines.append(
             f"- {asset_type}: {int(totals['count'])} generated across "
             f"{int(totals['runs'])} run(s), {totals['minutes'] / 60:.2f} hours saved, "
             f"${totals['money']:.2f} saved"
         )
 
-    print()
-    print(f"ROI log: {ROI_LOG_PATH}")
-    print(
-        "\nNext step: Use these totals in your reporting, then check the CSV if "
-        "you need the run-by-run details."
+    lines.extend(
+        [
+            "",
+            f"ROI log: {path}",
+            "",
+            "Next step: Use these totals in your reporting, then check the CSV if "
+            "you need the run-by-run details.",
+        ]
     )
+    return "\n".join(lines)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Report estimated automation ROI.")
+    parser.add_argument(
+        "--log-path",
+        type=Path,
+        default=ROI_LOG_PATH,
+        help="Path to the ROI CSV log.",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = build_parser().parse_args(argv)
+    welcome("automation ROI reporting")
+    print(build_report(read_roi_rows(args.log_path), args.log_path))
 
 
 if __name__ == "__main__":

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import argparse
+
 import qrcode
 
 from haqs_toolkit.utils.marketing import (
@@ -27,13 +29,25 @@ def create_qr_code(link: str):
     return qr.make_image(fill_color="black", back_color="white")
 
 
-def main() -> None:
-    welcome("QR code generation")
-    link = read_url("Paste your full link, including https://: ")
-
+def save_qr_code(link: str):
     image = create_qr_code(link)
     path = timestamped_output_path("qr_code", "png")
     image.save(path)
+    return path
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Generate a QR code PNG.")
+    parser.add_argument("--link", help="Full http:// or https:// URL to encode.")
+    return parser
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = build_parser().parse_args(argv)
+    welcome("QR code generation")
+    link = args.link or read_url("Paste your full link, including https://: ")
+
+    path = save_qr_code(link)
     minutes_saved = 5
     roi = log_roi_event(
         script="qr_code_generator",
