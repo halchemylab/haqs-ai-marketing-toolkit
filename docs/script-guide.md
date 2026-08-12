@@ -21,22 +21,26 @@ pip install -e .
 Launch the interactive toolkit:
 
 ```powershell
-python main.py
+haqs-toolkit
 ```
 
-After installing the package, the console command is also available:
+For local development, install the package in editable mode first:
 
 ```powershell
-haqs-toolkit
+pip install -e .
 ```
 
 ## Individual Generators
 
-Most existing generator scripts are interactive and ask for input in the terminal.
+Most generator modules are interactive and ask for input in the terminal.
 Generated files are written under `output/<date>/<category>/` unless
-`HAQS_OUTPUT_DIR` is set.
+`HAQS_OUTPUT_DIR` is set. Start with `haqs-toolkit` for individual tools.
 
-| Script | Purpose | Requires `OPENAI_API_KEY` |
+The root-level `python <script>.py` files are legacy compatibility wrappers
+around the packaged modules. Keep them working for older habits and automation,
+but prefer console commands and package modules for new workflows.
+
+| Legacy wrapper | Purpose | Requires `OPENAI_API_KEY` |
 | --- | --- | --- |
 | `content_repurposer.py` | Repurpose source content into social, email, hook, quote, and newsletter assets. | Yes |
 | `email_generator.py` | Generate three email drafts from source content and a purpose. | Yes |

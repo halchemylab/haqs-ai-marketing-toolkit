@@ -1,4 +1,4 @@
-"""Backward-compatible wrapper for the content repurposer."""
+"""Legacy wrapper for the packaged content repurposer."""
 
 from haqs_toolkit.generators.content_repurposer import *  # noqa: F403
 from haqs_toolkit.generators.content_repurposer import main

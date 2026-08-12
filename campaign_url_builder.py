@@ -1,4 +1,4 @@
-"""Backward-compatible wrapper for the campaign URL builder."""
+"""Legacy wrapper for the packaged campaign URL builder."""
 
 from haqs_toolkit.generators.campaign_url_builder import *  # noqa: F403
 from haqs_toolkit.generators.campaign_url_builder import main

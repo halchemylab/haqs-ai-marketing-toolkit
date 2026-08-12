@@ -1,4 +1,4 @@
-"""Backward-compatible wrapper for the email generator."""
+"""Legacy wrapper for the packaged email generator."""
 
 from haqs_toolkit.generators.email_generator import *  # noqa: F403
 from haqs_toolkit.generators.email_generator import main

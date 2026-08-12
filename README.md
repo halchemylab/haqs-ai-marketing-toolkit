@@ -79,6 +79,17 @@ $env:HAQS_OUTPUT_DIR="custom-output"
 
 ## Scripts
 
+The primary interface is the installed console commands:
+
+```powershell
+pip install -e .
+haqs-toolkit
+```
+
+Use `haqs-toolkit` to launch the interactive menu for individual generators.
+The root-level `python <script>.py` files remain as legacy compatibility
+wrappers, but new workflows should prefer the packaged commands.
+
 Generate a complete campaign packet from one brief:
 
 ```powershell
@@ -105,44 +116,44 @@ haqs-event events/demo-event
 Repurpose pasted source material into several marketing content formats:
 
 ```powershell
-python content_repurposer.py
+haqs-toolkit
 ```
 
 Build a campaign URL with UTM parameters:
 
 ```powershell
-python campaign_url_builder.py
+haqs-toolkit
 ```
 
 Generate three email options from pasted source content:
 
 ```powershell
-python email_generator.py
+haqs-toolkit
 ```
 
 Generate a QR code PNG from a link:
 
 ```powershell
-python qr_code_generator.py
+haqs-toolkit
 ```
 
 Generate landing page copy from a guided mini-brief:
 
 ```powershell
-python landing_page_copy_generator.py
+haqs-toolkit
 ```
 
 Build a marketing project plan CSV for spreadsheet editing or Asana import:
 
 ```powershell
-python project_plan_builder.py
+haqs-toolkit
 ```
 
 Turn raw customer feedback into short quotes, a case-study snippet, social
 proof, a website testimonial, and marketing callouts:
 
 ```powershell
-python testimonial_formatter.py
+haqs-toolkit
 ```
 
 The testimonial formatter asks whether the customer's identity may be shown.
@@ -151,7 +162,7 @@ Choose the anonymous option to omit their name and company from generated copy.
 View automation ROI totals:
 
 ```powershell
-python roi_report.py
+haqs-toolkit
 ```
 
 For multiline content prompts, paste the content and press Enter on a blank line when finished.

@@ -1,4 +1,4 @@
-"""Backward-compatible wrapper for the ROI report."""
+"""Legacy wrapper for the packaged ROI report."""
 
 from haqs_toolkit.generators.roi_report import *  # noqa: F403
 from haqs_toolkit.generators.roi_report import main
