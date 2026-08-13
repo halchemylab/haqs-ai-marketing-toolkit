@@ -15,7 +15,10 @@ Recommended daily flow:
 - Describe the campaign, event, client task, or asset I need.
 - Ask Codex which script or workflow fits the job.
 - Let Codex run or update the scripts and organize the generated files.
-- Review the results under `output/`.
+- Review the generated files:
+  - Campaign packets write to `<campaign_dir>/outputs/`.
+  - Event packets write to `<event_dir>/outputs/`.
+  - One-off tools write to dated folders under `output/`.
 - Move approved copy, URLs, QR codes, or plans into the final client or campaign
   workspace.
 
@@ -29,12 +32,25 @@ Useful Codex prompts:
 
 ## Choosing A Workflow
 
+When using Codex, describe the outcome first and let Codex choose the command.
+Use this routing as the default decision guide:
+
+- Full reusable campaign brief -> `haqs-campaign`
+- Structured event brief under `events/<event-slug>/brief.json` -> `haqs-event`
+- One-off asset such as a URL, QR code, email, testimonial, or ROI report ->
+  `haqs-toolkit`
+- Repeatable automation with known inputs -> a direct `python <script>.py`
+  command with flags
+
 Use a campaign packet when one brief should produce a full campaign set:
 
 ```powershell
 haqs-campaign --new campaigns/fall-workshop
 haqs-campaign campaigns/fall-workshop
 ```
+
+The `campaigns/` folder is only a recommended location. It is created when you
+create your first campaign packet.
 
 Use an event packet when the work starts from `events/<event-slug>/brief.json`
 and needs predictable review files:
@@ -70,6 +86,9 @@ tests/                      Unit tests for generators and shared helpers.
 output/                     Ignored generated assets and ROI logs.
 ```
 
+`campaigns/` may not exist in a fresh checkout until the first campaign packet
+is created.
+
 ## Brand Voice
 
 The toolkit uses one editable brand voice file:
@@ -98,6 +117,8 @@ $env:OPENAI_API_KEY="your-api-key-here"
 ```
 
 Or copy `.env.example` to `.env` and use a dotenv loader of your choice.
+The toolkit does not automatically load `.env`; Codex or the terminal session
+must expose those variables before running AI-powered scripts.
 
 By default, the AI scripts use `gpt-4.1-mini`. To use a different model for
 the current PowerShell session:
@@ -113,8 +134,9 @@ PowerShell session:
 $env:HOURLY_RATE="75"
 ```
 
-Generated files are saved in dated category folders under `output/`, for example
-`output/2026-08-05/emails/` or `output/2026-08-05/qr_codes/`.
+One-off generator files are saved in dated category folders under `output/`, for
+example `output/2026-08-05/emails/` or `output/2026-08-05/qr_codes/`. Campaign
+and event packet workflows write to their packet `outputs/` folders by default.
 
 To save generated files somewhere else for the current PowerShell session:
 
