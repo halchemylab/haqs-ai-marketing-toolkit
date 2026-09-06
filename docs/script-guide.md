@@ -32,7 +32,8 @@ pip install -e .
 
 Use the main CLI for one-off assets. Use `haqs-campaign` when a reusable brief
 should produce a complete campaign packet. Use `haqs-event` when an event has a
-structured `events/<event-slug>/brief.json` packet.
+structured `events/<event-slug>/brief.json` packet. Use `haqs-check` before
+publishing generated packet files.
 
 ## Repository Layout
 
@@ -81,6 +82,16 @@ python project_plan_builder.py --campaign-name "Fall Launch" `
 
 python roi_report.py --log-path output/roi/automation_roi.csv
 ```
+
+Check generated packet files before publishing:
+
+```powershell
+haqs-check campaigns/fall-workshop
+haqs-check events/demo-event/outputs
+```
+
+The checker scans generated Markdown and text files for unresolved placeholders,
+sample URLs, missing CTA links, empty sections, and generation fallback notes.
 
 ## Expected Outputs
 

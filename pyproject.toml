@@ -41,6 +41,7 @@ packages = [
 haqs-toolkit = "haqs_toolkit.cli:main"
 haqs-campaign = "haqs_toolkit.campaigns:main"
 haqs-event = "haqs_toolkit.events:main"
+haqs-check = "haqs_toolkit.packet_quality:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -28,6 +28,7 @@ Useful Codex prompts:
 - "Turn this client feedback into testimonials."
 - "Build UTM links for this campaign."
 - "Generate landing page copy from this offer."
+- "Check this campaign packet before I publish it."
 - "Show me the ROI report."
 
 ## Choosing A Workflow
@@ -37,6 +38,7 @@ Use this routing as the default decision guide:
 
 - Full reusable campaign brief -> `haqs-campaign`
 - Structured event brief under `events/<event-slug>/brief.json` -> `haqs-event`
+- Pre-publish packet review -> `haqs-check`
 - One-off asset such as a URL, QR code, email, testimonial, or ROI report ->
   `haqs-toolkit`
 - Repeatable automation with known inputs -> a direct `python <script>.py`
@@ -72,6 +74,18 @@ Use non-interactive flags for repeatable automation:
 python campaign_url_builder.py --landing-page-url https://example.com `
   --source linkedin --medium social --campaign-name fall_launch
 ```
+
+Run a pre-publish quality check before moving generated copy into a final
+workspace:
+
+```powershell
+haqs-check campaigns/fall-workshop
+haqs-check events/demo-event/outputs
+```
+
+The checker scans generated Markdown and text files for unresolved placeholders,
+sample URLs such as `example.com`, missing CTA links, empty sections, and
+generation fallback notes.
 
 ## File Structure
 
@@ -178,6 +192,13 @@ If the package is installed, the same runner is available as:
 
 ```powershell
 haqs-event events/demo-event
+```
+
+Check a generated campaign or event packet before publishing:
+
+```powershell
+haqs-check campaigns/fall-workshop
+haqs-check events/demo-event
 ```
 
 Repurpose pasted source material into several marketing content formats:
