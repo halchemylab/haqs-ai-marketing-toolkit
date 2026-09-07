@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import unittest
 
-from testimonial_formatter import (
+from haqs_toolkit.generators.testimonial_formatter import (
     build_attribution,
     build_prompt,
     format_content_pack,

@@ -3,7 +3,7 @@ from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from project_plan_builder import (
+from haqs_toolkit.generators.project_plan_builder import (
     ASANA_FIELDNAMES,
     CAMPAIGN_TEMPLATES,
     PROJECT_PLAN_FIELDNAMES,

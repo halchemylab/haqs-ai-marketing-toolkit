@@ -33,6 +33,12 @@ Useful Codex prompts:
 
 ## Choosing A Workflow
 
+Start with the short command map when you only need to know what to run:
+
+```text
+COMMANDS.md
+```
+
 When using Codex, describe the outcome first and let Codex choose the command.
 Use this routing as the default decision guide:
 
@@ -41,8 +47,8 @@ Use this routing as the default decision guide:
 - Pre-publish packet review -> `haqs-check`
 - One-off asset such as a URL, QR code, email, testimonial, or ROI report ->
   `haqs-toolkit`
-- Repeatable automation with known inputs -> a direct `python <script>.py`
-  command with flags
+- Repeatable automation with known inputs -> a direct
+  `python -m haqs_toolkit.generators.<module>` command with flags
 
 Use a campaign packet when one brief should produce a full campaign set:
 
@@ -71,7 +77,7 @@ haqs-toolkit
 Use non-interactive flags for repeatable automation:
 
 ```powershell
-python campaign_url_builder.py --landing-page-url https://example.com `
+python -m haqs_toolkit.generators.campaign_url_builder --landing-page-url https://example.com `
   --source linkedin --medium social --campaign-name fall_launch
 ```
 
@@ -96,6 +102,7 @@ haqs_toolkit/data/          Packaged data templates used by generators.
 campaigns/                  Recommended home for reusable campaign packets.
 events/                     Event packet briefs, inputs, and outputs.
 docs/                       Usage notes and script guidance.
+scripts/                    Script entry points and legacy wrappers.
 tests/                      Unit tests for generators and shared helpers.
 output/                     Ignored generated assets and ROI logs.
 ```
@@ -168,8 +175,8 @@ haqs-toolkit
 ```
 
 Use `haqs-toolkit` to launch the interactive menu for individual generators.
-The root-level `python <script>.py` files remain as legacy compatibility
-wrappers, but new workflows should prefer the packaged commands.
+Legacy `python <script>.py` wrappers live in `scripts/legacy/`, but new
+workflows should prefer the packaged commands.
 
 Generate a complete campaign packet from one brief:
 

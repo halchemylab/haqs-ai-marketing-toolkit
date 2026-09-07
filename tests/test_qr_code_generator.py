@@ -1,6 +1,6 @@
 import unittest
 
-from qr_code_generator import build_parser, create_qr_code
+from haqs_toolkit.generators.qr_code_generator import build_parser, create_qr_code
 
 
 class QrCodeGeneratorTests(unittest.TestCase):

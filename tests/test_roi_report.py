@@ -1,6 +1,6 @@
 import unittest
 
-from roi_report import as_float, as_int, build_report
+from haqs_toolkit.generators.roi_report import as_float, as_int, build_report
 
 
 class RoiReportTests(unittest.TestCase):

@@ -18,6 +18,8 @@ pip install -e .
 
 ## Main CLI
 
+For a short "which command should I run?" reference, start with `COMMANDS.md`.
+
 Launch the interactive toolkit:
 
 ```powershell
@@ -43,6 +45,7 @@ haqs_toolkit/               Packaged commands, workflows, generators, helpers.
 haqs_toolkit/data/          Data templates loaded by packaged generators.
 events/                     Event packet briefs, inputs, and outputs.
 docs/                       Usage notes.
+scripts/                    Script entry points and legacy wrappers.
 tests/                      Unit tests.
 output/                     Ignored generated files and ROI logs.
 ```
@@ -53,34 +56,34 @@ Most generator modules are interactive and ask for input in the terminal.
 Generated files are written under `output/<date>/<category>/` unless
 `HAQS_OUTPUT_DIR` is set. Start with `haqs-toolkit` for individual tools.
 
-The root-level `python <script>.py` files are legacy compatibility wrappers
-around the packaged modules. Keep them working for older habits and automation,
-but prefer console commands and package modules for new workflows.
+Legacy `python <script>.py` wrappers live in `scripts/legacy/`. Keep them
+working for older habits and automation, but prefer console commands and package
+modules for new workflows.
 
 | Legacy wrapper | Purpose | Requires `OPENAI_API_KEY` |
 | --- | --- | --- |
-| `content_repurposer.py` | Repurpose source content into social, email, hook, quote, and newsletter assets. | Yes |
-| `email_generator.py` | Generate three email drafts from source content and a purpose. | Yes |
-| `landing_page_copy_generator.py` | Generate landing page copy from a guided brief. | Yes |
-| `testimonial_formatter.py` | Turn feedback into reusable social proof. | Yes |
-| `campaign_url_builder.py` | Build UTM campaign URLs. | No |
-| `project_plan_builder.py` | Build campaign project plan CSV and Markdown files. | No |
-| `qr_code_generator.py` | Generate a QR code PNG from a URL. | No |
-| `roi_report.py` | Summarize tracked automation ROI. | No |
+| `scripts/legacy/content_repurposer.py` | Repurpose source content into social, email, hook, quote, and newsletter assets. | Yes |
+| `scripts/legacy/email_generator.py` | Generate three email drafts from source content and a purpose. | Yes |
+| `scripts/legacy/landing_page_copy_generator.py` | Generate landing page copy from a guided brief. | Yes |
+| `scripts/legacy/testimonial_formatter.py` | Turn feedback into reusable social proof. | Yes |
+| `scripts/legacy/campaign_url_builder.py` | Build UTM campaign URLs. | No |
+| `scripts/legacy/project_plan_builder.py` | Build campaign project plan CSV and Markdown files. | No |
+| `scripts/legacy/qr_code_generator.py` | Generate a QR code PNG from a URL. | No |
+| `scripts/legacy/roi_report.py` | Summarize tracked automation ROI. | No |
 
 Several operational tools also support non-interactive flags:
 
 ```powershell
-python campaign_url_builder.py --landing-page-url https://example.com `
+python -m haqs_toolkit.generators.campaign_url_builder --landing-page-url https://example.com `
   --source linkedin --medium social --campaign-name fall_launch
 
-python qr_code_generator.py --link https://example.com
+python -m haqs_toolkit.generators.qr_code_generator --link https://example.com
 
-python project_plan_builder.py --campaign-name "Fall Launch" `
+python -m haqs_toolkit.generators.project_plan_builder --campaign-name "Fall Launch" `
   --campaign-type email_campaign --launch-date 2026-09-15 `
   --channels email,linkedin --team Sam=Copy
 
-python roi_report.py --log-path output/roi/automation_roi.csv
+python -m haqs_toolkit.generators.roi_report --log-path output/roi/automation_roi.csv
 ```
 
 Check generated packet files before publishing:

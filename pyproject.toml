@@ -15,17 +15,6 @@ dependencies = [
 ]
 
 [tool.setuptools]
-py-modules = [
-    "campaign_url_builder",
-    "content_repurposer",
-    "email_generator",
-    "landing_page_copy_generator",
-    "main",
-    "project_plan_builder",
-    "qr_code_generator",
-    "roi_report",
-    "testimonial_formatter",
-]
 packages = [
     "haqs_toolkit.data",
     "haqs_toolkit",
