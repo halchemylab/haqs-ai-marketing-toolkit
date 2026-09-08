@@ -1,6 +1,9 @@
 import unittest
 
-from haqs_toolkit.generators.content_repurposer import OUTPUT_FORMATS, parse_json_response
+from haqs_toolkit.generators.content_repurposer import (
+    OUTPUT_FORMATS,
+    parse_json_response,
+)
 
 
 class ContentRepurposerTests(unittest.TestCase):

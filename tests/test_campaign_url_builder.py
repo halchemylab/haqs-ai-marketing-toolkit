@@ -1,6 +1,9 @@
 import unittest
 
-from haqs_toolkit.generators.campaign_url_builder import add_utm_parameters, build_parser
+from haqs_toolkit.generators.campaign_url_builder import (
+    add_utm_parameters,
+    build_parser,
+)
 
 
 class CampaignUrlBuilderTests(unittest.TestCase):
