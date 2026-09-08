@@ -163,7 +163,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Generate predictable marketing files from an event packet.",
         epilog=(
-            "Example: python scripts/run_event_pipeline.py "
+            "Example: python marketing_event_ai_builder.py "
             "events/demo-event --out events/demo-event/outputs"
         ),
     )

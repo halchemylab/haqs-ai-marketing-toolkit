@@ -45,7 +45,9 @@ haqs_toolkit/               Packaged commands, workflows, generators, helpers.
 haqs_toolkit/data/          Data templates loaded by packaged generators.
 events/                     Event packet briefs, inputs, and outputs.
 docs/                       Usage notes.
-scripts/                    Script entry points and legacy wrappers.
+marketing_event_ai_builder.py
+                            Root-level event marketing asset builder.
+scripts/                    Legacy wrappers.
 tests/                      Unit tests.
 output/                     Ignored generated files and ROI logs.
 ```
@@ -119,7 +121,7 @@ predictable set of review-ready marketing files to `outputs/`.
 Run it directly:
 
 ```powershell
-python scripts/run_event_pipeline.py events/demo-event
+python marketing_event_ai_builder.py events/demo-event
 ```
 
 Or, after installing the package:

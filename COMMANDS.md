@@ -52,6 +52,7 @@ python -m haqs_toolkit.generators.roi_report --log-path output/roi/automation_ro
 
 ## Legacy Wrappers
 
-Old root-level wrappers were moved to `scripts/legacy/` to keep the repo root
-clean. They are kept only for older habits and automation. Prefer the commands
-above for new work.
+Most old root-level wrappers live in `scripts/legacy/` and are kept only for
+older habits and automation. The event marketing asset builder is available at
+the repo root as `marketing_event_ai_builder.py`; prefer the commands above for
+new work.

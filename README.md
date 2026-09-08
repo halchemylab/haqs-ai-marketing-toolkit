@@ -102,7 +102,9 @@ haqs_toolkit/data/          Packaged data templates used by generators.
 campaigns/                  Recommended home for reusable campaign packets.
 events/                     Event packet briefs, inputs, and outputs.
 docs/                       Usage notes and script guidance.
-scripts/                    Script entry points and legacy wrappers.
+marketing_event_ai_builder.py
+                            Root-level event marketing asset builder.
+scripts/                    Legacy wrappers.
 tests/                      Unit tests for generators and shared helpers.
 output/                     Ignored generated assets and ROI logs.
 ```
@@ -192,7 +194,7 @@ copy, a campaign URL, QR code, project plan, and `packet-index.md`.
 Generate a predictable event asset packet from `events/<event-slug>/brief.json`:
 
 ```powershell
-python scripts/run_event_pipeline.py events/demo-event
+python marketing_event_ai_builder.py events/demo-event
 ```
 
 If the package is installed, the same runner is available as:

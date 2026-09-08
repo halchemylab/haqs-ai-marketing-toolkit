@@ -1,11 +1,11 @@
-"""Run the event marketing pipeline from a packet directory."""
+"""Build AI-assisted event marketing assets from a packet directory."""
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from haqs_toolkit.events import main
 
