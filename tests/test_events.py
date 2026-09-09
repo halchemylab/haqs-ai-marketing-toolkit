@@ -52,6 +52,7 @@ https://example.com/spring-workshop
             [
                 *pasted_event.splitlines(),
                 "END",
+                "1",
             ]
         )
 
@@ -67,6 +68,33 @@ https://example.com/spring-workshop
         self.assertEqual(call["job_type"], "event")
         self.assertEqual(call["scope"], "complete")
         self.assertIn("email", call["selected_assets"])
+
+    def test_main_without_event_dir_can_create_selected_assets_from_paste(self):
+        pasted_event = """
+Spring Workshop
+Thursday, September 17th, 2026 from 11:00 AM to 12:00 PM EDT
+
+Practical marketing workflow for small business owners.
+https://example.com/spring-workshop
+""".strip()
+        answers = iter(
+            [
+                *pasted_event.splitlines(),
+                "END",
+                "2",
+                "1,3",
+            ]
+        )
+
+        with patch("builtins.input", side_effect=lambda *_args: next(answers)):
+            with patch("haqs_toolkit.create.run_creation") as run_creation:
+                exit_code = events.main([])
+
+        self.assertEqual(exit_code, 0)
+        run_creation.assert_called_once()
+        call = run_creation.call_args.kwargs
+        self.assertEqual(call["scope"], "selected")
+        self.assertEqual(call["selected_assets"], ["tracked_url", "email"])
 
     def test_out_without_event_dir_is_still_invalid(self):
         with TemporaryDirectory() as directory:

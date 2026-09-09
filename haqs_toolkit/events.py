@@ -235,6 +235,19 @@ def brief_from_pasted_details() -> dict[str, object]:
     return brief
 
 
+def choose_event_run_options() -> tuple[str, list[str]]:
+    from haqs_toolkit import create
+
+    scope_label = create.choose_option(
+        "What do you want to generate?",
+        ["Complete event packet", "Selected assets"],
+    )
+    if scope_label == "Complete event packet":
+        return create.SCOPE_COMPLETE, create.EVENT_COMPLETE_ASSETS.copy()
+
+    return create.SCOPE_SELECTED, create.choose_assets(create.JOB_EVENT)
+
+
 def brief_text(brief: dict[str, object]) -> str:
     lines = []
     for key, value in brief.items():
@@ -355,11 +368,12 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Error: {exc}")
             return 1
 
+        scope, selected_assets = choose_event_run_options()
         create.run_creation(
             brief=brief,
             job_type=create.JOB_EVENT,
-            scope=create.SCOPE_COMPLETE,
-            selected_assets=create.EVENT_COMPLETE_ASSETS.copy(),
+            scope=scope,
+            selected_assets=selected_assets,
         )
         return 0
 
