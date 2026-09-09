@@ -10,12 +10,12 @@ from haqs_toolkit.runs import create_run_dir, slugify
 
 class CreateFlowTests(unittest.TestCase):
     def test_slugify_makes_readable_folder_parts(self):
-        self.assertEqual(slugify("Demo Growth Workshop!"), "demo-growth-workshop")
+        self.assertEqual(slugify("Spring Workshop!"), "spring-workshop")
 
     def test_create_run_dir_uses_flat_job_type_scope_date_name(self):
         with TemporaryDirectory() as directory:
             run_dir = create_run_dir(
-                "Demo Growth Workshop",
+                "Spring Workshop",
                 "event",
                 "selected",
                 runs_dir=Path(directory),
@@ -24,17 +24,17 @@ class CreateFlowTests(unittest.TestCase):
 
         self.assertEqual(
             run_dir.name,
-            "demo-growth-workshop-event-selected-2026-09-09-1345",
+            "spring-workshop-event-selected-2026-09-09-1345",
         )
 
     def test_selected_event_run_writes_one_folder_outputs_and_quality_check(self):
         brief = {
-            "event_name": "Demo Growth Workshop",
+            "event_name": "Spring Workshop",
             "event_date": "2026-09-18",
             "audience": "Small business owners",
             "goal": "Drive registrations",
             "cta": "Register Now",
-            "registration_url": "https://example.com/demo-growth-workshop",
+            "registration_url": "https://example.com/spring-workshop",
         }
 
         with TemporaryDirectory() as directory:
@@ -71,12 +71,12 @@ class CreateFlowTests(unittest.TestCase):
             brief_path.write_text(
                 """
 {
-  "event_name": "Demo Growth Workshop",
+  "event_name": "Spring Workshop",
   "event_date": "2026-09-18",
   "audience": "Small business owners",
   "goal": "Drive registrations",
   "cta": "Register Now",
-  "registration_url": "https://example.com/demo-growth-workshop"
+  "registration_url": "https://example.com/spring-workshop"
 }
 """.strip()
                 + "\n",

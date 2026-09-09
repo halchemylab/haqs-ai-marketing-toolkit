@@ -65,8 +65,8 @@ runs/<job-slug>-<job-type>-<scope>-YYYY-MM-DD-HHMM/
 Examples:
 
 ```text
-runs/demo-growth-workshop-event-complete-2026-09-09-1332/
-runs/demo-growth-workshop-event-selected-2026-09-09-1345/
+runs/spring-workshop-event-complete-2026-09-09-1332/
+runs/spring-workshop-event-selected-2026-09-09-1345/
 runs/fall-lead-magnet-campaign-complete-2026-09-09-1401/
 ```
 
@@ -84,7 +84,7 @@ such as tracked URL plus QR code, or email sequence plus social posts.
 Use non-interactive flags for repeatable creation:
 
 ```powershell
-haqs-create --scope selected --job-type event --brief events/demo-event/brief.json `
+haqs-create --scope selected --job-type event --brief path/to/event-brief.json `
   --assets tracked_url,qr_code,social
 ```
 
@@ -109,8 +109,6 @@ campaigns/                  Recommended home for reusable campaign packets.
 events/                     Event packet briefs, inputs, and outputs.
 runs/                       One folder per marketing creation run.
 docs/                       Usage notes and script guidance.
-marketing_event_ai_builder.py
-                            Root-level event marketing asset builder.
 scripts/                    Legacy wrappers.
 tests/                      Unit tests for generators and shared helpers.
 output/                     Ignored generated assets and ROI logs.
@@ -190,7 +188,7 @@ generators.
 Create selected assets from an existing event brief:
 
 ```powershell
-haqs-create --scope selected --job-type event --brief events/demo-event/brief.json `
+haqs-create --scope selected --job-type event --brief path/to/event-brief.json `
   --assets tracked_url,qr_code,social
 ```
 

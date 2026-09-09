@@ -1,6 +1,7 @@
 # Python Script Guide
 
-This guide describes the Python entry points Codex can use in this repository.
+This guide describes the current Python entry points Codex can use in this
+repository.
 
 ## Setup
 
@@ -16,64 +17,68 @@ Optional editable install:
 pip install -e .
 ```
 
-## Main CLI
+## Main Creation Flow
 
-For a short "which command should I run?" reference, start with `COMMANDS.md`.
-
-Launch the interactive toolkit:
+Use `haqs-create` for normal marketing asset creation.
 
 ```powershell
-haqs-toolkit
+haqs-create
 ```
 
-For local development, install the package in editable mode first:
+It supports two scopes:
 
-```powershell
-pip install -e .
-```
+- Complete packet: generate the recommended asset set.
+- Selected assets: generate only the assets needed from the same brief.
 
-Use the main CLI for one-off assets. Use `haqs-campaign` when a reusable brief
-should produce a complete campaign packet. Use `haqs-event` when an event has a
-structured `events/<event-slug>/brief.json` packet. Use `haqs-check` before
-publishing generated packet files.
+It supports two job types:
 
-## Repository Layout
+- Event
+- Campaign / offer
+
+Each run creates one folder:
 
 ```text
-brand_voice.txt             Global AI copy voice.
-haqs_toolkit/               Packaged commands, workflows, generators, helpers.
-haqs_toolkit/data/          Data templates loaded by packaged generators.
-events/                     Event packet briefs, inputs, and outputs.
-docs/                       Usage notes.
-marketing_event_ai_builder.py
-                            Root-level event marketing asset builder.
-scripts/                    Legacy wrappers.
-tests/                      Unit tests.
-output/                     Ignored generated files and ROI logs.
+runs/<job-slug>-<job-type>-<scope>-YYYY-MM-DD-HHMM>/
+  brief.json
+  outputs/
+  packet-index.md
+  quality-check.md
 ```
 
-## Individual Generators
+Quality checks run automatically after assets are generated.
 
-Most generator modules are interactive and ask for input in the terminal.
-Generated files are written under `output/<date>/<category>/` unless
-`HAQS_OUTPUT_DIR` is set. Start with `haqs-toolkit` for individual tools.
+## Non-Interactive Examples
 
-Legacy `python <script>.py` wrappers live in `scripts/legacy/`. Keep them
-working for older habits and automation, but prefer console commands and package
-modules for new workflows.
+Create selected event assets from an existing brief:
 
-| Legacy wrapper | Purpose | Requires `OPENAI_API_KEY` |
-| --- | --- | --- |
-| `scripts/legacy/content_repurposer.py` | Repurpose source content into social, email, hook, quote, and newsletter assets. | Yes |
-| `scripts/legacy/email_generator.py` | Generate three email drafts from source content and a purpose. | Yes |
-| `scripts/legacy/landing_page_copy_generator.py` | Generate landing page copy from a guided brief. | Yes |
-| `scripts/legacy/testimonial_formatter.py` | Turn feedback into reusable social proof. | Yes |
-| `scripts/legacy/campaign_url_builder.py` | Build UTM campaign URLs. | No |
-| `scripts/legacy/project_plan_builder.py` | Build campaign project plan CSV and Markdown files. | No |
-| `scripts/legacy/qr_code_generator.py` | Generate a QR code PNG from a URL. | No |
-| `scripts/legacy/roi_report.py` | Summarize tracked automation ROI. | No |
+```powershell
+haqs-create --scope selected --job-type event --brief path/to/event-brief.json `
+  --assets tracked_url,qr_code,social
+```
 
-Several operational tools also support non-interactive flags:
+Create a complete campaign packet from an existing brief:
+
+```powershell
+haqs-create --scope complete --job-type campaign --brief path/to/campaign-brief.json
+```
+
+Selected asset keys:
+
+```text
+tracked_url
+qr_code
+email
+social
+landing_page
+project_plan
+```
+
+`project_plan` is available for campaign runs.
+
+## Lower-Level Generators
+
+The packaged generator modules are still available for focused automation.
+They write to `output/<date>/<category>/` unless `HAQS_OUTPUT_DIR` is set.
 
 ```powershell
 python -m haqs_toolkit.generators.campaign_url_builder --landing-page-url https://example.com `
@@ -88,44 +93,8 @@ python -m haqs_toolkit.generators.project_plan_builder --campaign-name "Fall Lau
 python -m haqs_toolkit.generators.roi_report --log-path output/roi/automation_roi.csv
 ```
 
-Check generated packet files before publishing:
-
-```powershell
-haqs-check campaigns/fall-workshop
-haqs-check events/demo-event/outputs
-```
-
-The checker scans generated Markdown and text files for unresolved placeholders,
-sample URLs, missing CTA links, empty sections, and generation fallback notes.
-
 ## Expected Outputs
 
-AI copy generators save text or Markdown files. Operational tools save CSV, PNG,
-or text files. Every completed generator logs estimated time savings to
-`output/roi/automation_roi.csv`.
-
-## Event Workflow
-
-For repeatable event work, use an event packet:
-
-```text
-events/<event-slug>/
-  brief.json
-  inputs/
-  outputs/
-```
-
-The event runner reads `brief.json`, validates required fields, and writes a
-predictable set of review-ready marketing files to `outputs/`.
-
-Run it directly:
-
-```powershell
-python marketing_event_ai_builder.py events/demo-event
-```
-
-Or, after installing the package:
-
-```powershell
-haqs-event events/demo-event
-```
+`haqs-create` outputs one self-contained run folder. Lower-level generators save
+individual files under `output/`. Every completed generator logs estimated time
+savings to `output/roi/automation_roi.csv`.
