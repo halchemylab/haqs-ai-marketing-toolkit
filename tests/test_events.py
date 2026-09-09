@@ -7,32 +7,63 @@ from haqs_toolkit import events
 
 
 class EventScriptTests(unittest.TestCase):
-    def test_main_without_event_dir_creates_interactive_complete_run(self):
+    def test_parse_event_details_extracts_human_event_page_copy(self):
+        brief = events.parse_event_details(
+            """
+Genius at Scale: How to Lead Innovation That Lasts with Emily Tedards
+Thursday, September 17th, 2026 from 11:00 AM to 12:00 PM EDT
+
+Event will begin in 7 days and 16 hours
+
+displayed image
+
+In today's hyper-competitive landscape, many organizations face a frustrating paradox.
+
+Ideal Participants for This Conversation
+
+Current or aspiring leaders who want to stop guessing at innovation and start applying a proven, science-based model for cultivating genius at scale.
+https://example.com/register
+""".strip()
+        )
+
+        self.assertEqual(
+            brief["event_name"],
+            "Genius at Scale: How to Lead Innovation That Lasts with Emily Tedards",
+        )
+        self.assertEqual(brief["event_date"], "2026-09-17")
+        self.assertEqual(brief["event_time"], "11:00 AM to 12:00 PM")
+        self.assertEqual(brief["timezone"], "EDT")
+        self.assertIn("Current or aspiring leaders", str(brief["audience"]))
+        self.assertEqual(brief["registration_url"], "https://example.com/register")
+
+    def test_main_without_event_dir_creates_complete_run_from_paste(self):
+        pasted_event = """
+Spring Workshop
+Thursday, September 17th, 2026 from 11:00 AM to 12:00 PM EDT
+
+Practical marketing workflow for small business owners.
+
+Ideal Participants for This Conversation
+
+Small business owners
+https://example.com/spring-workshop
+""".strip()
         answers = iter(
             [
-                "Spring Workshop",
-                "2026-09-18",
-                "10:00 AM",
-                "America/Los_Angeles",
-                "Online",
-                "Small business owners",
-                "Drive registrations",
-                "Practical marketing workflow",
-                "Register Now",
-                "https://example.com/spring-workshop",
-                "Clear and practical",
+                *pasted_event.splitlines(),
+                "END",
             ]
         )
 
-        with TemporaryDirectory() as directory:
-            with patch("builtins.input", side_effect=lambda _prompt: next(answers)):
-                with patch("haqs_toolkit.create.run_creation") as run_creation:
-                    exit_code = events.main([])
+        with patch("builtins.input", side_effect=lambda *_args: next(answers)):
+            with patch("haqs_toolkit.create.run_creation") as run_creation:
+                exit_code = events.main([])
 
         self.assertEqual(exit_code, 0)
         run_creation.assert_called_once()
         call = run_creation.call_args.kwargs
         self.assertEqual(call["brief"]["event_name"], "Spring Workshop")
+        self.assertEqual(call["brief"]["event_date"], "2026-09-17")
         self.assertEqual(call["job_type"], "event")
         self.assertEqual(call["scope"], "complete")
         self.assertIn("email", call["selected_assets"])

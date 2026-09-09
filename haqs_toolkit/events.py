@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
 from haqs_toolkit.runs import write_quality_check
-from haqs_toolkit.utils.marketing import load_brand_voice
+from haqs_toolkit.utils.marketing import load_brand_voice, read_url
 
 RECOMMENDED_FIELDS = [
     "event_name",
@@ -33,6 +34,36 @@ REQUIRED_FIELDS = [
     "cta",
     "registration_url",
 ]
+MONTHS = {
+    month.lower(): index
+    for index, month in enumerate(
+        [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ],
+        start=1,
+    )
+}
+DATE_LINE_PATTERN = re.compile(
+    r"(?:(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s+)?"
+    r"(?P<month>January|February|March|April|May|June|July|August|September|"
+    r"October|November|December)\s+"
+    r"(?P<day>\d{1,2})(?:st|nd|rd|th)?,\s+"
+    r"(?P<year>\d{4})"
+    r"(?:\s+from\s+(?P<time>.+?)(?:\s+(?P<timezone>[A-Z]{2,5}))?)?$",
+    re.IGNORECASE,
+)
+URL_PATTERN = re.compile(r"https?://[^\s)>\]]+")
 
 
 class EventBriefError(ValueError):
@@ -91,6 +122,117 @@ def validate_event_brief(brief: dict[str, object]) -> None:
 
     if errors:
         raise EventBriefError("\n".join(errors))
+
+
+def read_pasted_event_details() -> str:
+    print("Paste the event page text below.")
+    print("When finished, type END on its own line and press Enter.")
+    lines = []
+    while True:
+        try:
+            line = input()
+        except EOFError:
+            break
+        if line.strip().upper() == "END":
+            break
+        lines.append(line)
+    return "\n".join(lines).strip()
+
+
+def parse_event_date_line(line: str) -> tuple[str, str, str] | None:
+    match = DATE_LINE_PATTERN.search(line.strip())
+    if not match:
+        return None
+
+    month = MONTHS[match.group("month").lower()]
+    day = int(match.group("day"))
+    year = int(match.group("year"))
+    event_date = datetime(year, month, day).strftime("%Y-%m-%d")
+    event_time = (match.group("time") or "").strip()
+    timezone = (match.group("timezone") or "").strip()
+    if timezone and event_time.endswith(timezone):
+        event_time = event_time[: -len(timezone)].strip()
+    return event_date, event_time, timezone
+
+
+def first_paragraph(lines: list[str]) -> str:
+    paragraph = []
+    for line in lines:
+        stripped = line.strip()
+        if paragraph and not stripped:
+            break
+        if stripped:
+            paragraph.append(stripped)
+    return " ".join(paragraph)
+
+
+def audience_from_lines(lines: list[str]) -> str:
+    for index, line in enumerate(lines):
+        if line.strip().lower().startswith("ideal participants"):
+            audience = first_paragraph(lines[index + 1 :])
+            if audience:
+                return audience
+    return "Event attendees"
+
+
+def parse_event_details(text: str) -> dict[str, object]:
+    lines = [line.strip() for line in text.splitlines()]
+    meaningful_lines = [
+        line
+        for line in lines
+        if line and line.lower() not in {"displayed image"}
+    ]
+    if not meaningful_lines:
+        raise EventBriefError("Paste event page text before typing END.")
+
+    event_name = meaningful_lines[0]
+    event_date = ""
+    event_time = ""
+    timezone = ""
+    date_line_index = -1
+    for index, line in enumerate(meaningful_lines[1:], start=1):
+        parsed_date = parse_event_date_line(line)
+        if parsed_date:
+            event_date, event_time, timezone = parsed_date
+            date_line_index = index
+            break
+
+    if date_line_index >= 0:
+        body_lines = meaningful_lines[date_line_index + 1 :]
+    else:
+        body_lines = meaningful_lines[1:]
+    body_lines = [
+        line
+        for line in body_lines
+        if not line.lower().startswith("event will begin in")
+    ]
+    offer = first_paragraph(body_lines)
+    urls = URL_PATTERN.findall(text)
+    registration_url = urls[0].rstrip(".,") if urls else ""
+
+    return {
+        "event_name": event_name,
+        "event_date": event_date,
+        "event_time": event_time,
+        "timezone": timezone,
+        "location": "Online",
+        "audience": audience_from_lines(body_lines),
+        "goal": f"Drive registrations for {event_name}",
+        "offer": offer,
+        "cta": "Register Now",
+        "registration_url": registration_url,
+        "tone": "Clear and practical",
+        "channels": ["email", "social"],
+        "source_material": text,
+    }
+
+
+def brief_from_pasted_details() -> dict[str, object]:
+    brief = parse_event_details(read_pasted_event_details())
+    if not brief["registration_url"]:
+        brief["registration_url"] = read_url("Registration URL: ")
+    validate_event_brief(brief)
+    return brief
 
 
 def brief_text(brief: dict[str, object]) -> str:
@@ -206,7 +348,7 @@ def main(argv: list[str] | None = None) -> int:
 
         from haqs_toolkit import create
 
-        brief = create.brief_from_inputs(create.JOB_EVENT)
+        brief = brief_from_pasted_details()
         try:
             validate_event_brief(brief)
         except EventBriefError as exc:
