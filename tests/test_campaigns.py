@@ -61,7 +61,14 @@ class CampaignTests(unittest.TestCase):
                 "generate_text",
                 side_effect=campaigns.AiGenerationError("offline"),
             ):
-                paths = campaigns.generate_campaign_packet(campaign_dir)
+                with patch.object(
+                    campaigns.qr_code_generator,
+                    "create_qr_code",
+                ) as create_qr_code:
+                    create_qr_code.return_value.save.side_effect = (
+                        lambda path: Path(path).write_bytes(b"qr")
+                    )
+                    paths = campaigns.generate_campaign_packet(campaign_dir)
 
             names = {path.name for path in paths}
             self.assertIn("campaign-url.txt", names)
@@ -77,6 +84,30 @@ class CampaignTests(unittest.TestCase):
             )
             self.assertIn("campaign-url.txt", index)
             self.assertIn("project-plan.csv", index)
+
+            tracked_urls = (campaign_dir / "outputs" / "campaign-url.txt").read_text(
+                encoding="utf-8"
+            )
+            email = (campaign_dir / "outputs" / "email-drafts.md").read_text(
+                encoding="utf-8"
+            )
+            social = (campaign_dir / "outputs" / "social-posts.md").read_text(
+                encoding="utf-8"
+            )
+            landing = (
+                campaign_dir / "outputs" / "landing-page-copy.md"
+            ).read_text(encoding="utf-8")
+            self.assertIn("utm_source=email", tracked_urls)
+            self.assertIn("utm_source=linkedin", tracked_urls)
+            self.assertIn("utm_source=facebook", tracked_urls)
+            self.assertIn("utm_source=qr_code", tracked_urls)
+            self.assertIn("utm_source=email", email)
+            self.assertIn("utm_source=linkedin", social)
+            self.assertIn("utm_source=landing_page", landing)
+            create_qr_code.assert_called_once()
+            qr_url = create_qr_code.call_args.args[0]
+            self.assertIn("utm_source=qr_code", qr_url)
+            self.assertNotIn("utm_source=email", qr_url)
 
     def test_main_list_fields(self):
         self.assertEqual(campaigns.main(["--list-fields"]), 0)

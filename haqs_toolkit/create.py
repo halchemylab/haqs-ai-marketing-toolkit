@@ -12,7 +12,6 @@ from haqs_toolkit.generators import (
     landing_page_copy_generator,
     qr_code_generator,
 )
-from haqs_toolkit.generators.campaign_url_builder import add_utm_parameters
 from haqs_toolkit.runs import create_run_dir, write_packet_index, write_quality_check
 from haqs_toolkit.utils.marketing import (
     choose_option,
@@ -87,20 +86,6 @@ def parse_assets(raw_assets: str | None, job_type: str, scope: str) -> list[str]
     return assets
 
 
-def campaign_url_for_event(brief: dict[str, object]) -> str:
-    event_name = str(brief["event_name"])
-    return add_utm_parameters(
-        landing_page_url=str(brief["registration_url"]),
-        source=str(brief.get("utm_source") or "event"),
-        medium=str(brief.get("utm_medium") or "marketing"),
-        campaign_name=str(brief.get("utm_campaign") or event_name)
-        .strip()
-        .lower()
-        .replace(" ", "_"),
-        campaign_content=str(brief.get("utm_content") or ""),
-    )
-
-
 def write_json(path: Path, data: dict[str, object]) -> Path:
     path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     return path
@@ -118,7 +103,7 @@ def write_event_run_assets(
     selected_assets: list[str],
 ) -> list[Path]:
     brand_voice = load_brand_voice()
-    campaign_url = campaign_url_for_event(brief)
+    tracking_urls = events.event_tracking_urls(brief)
     paths = [
         write_text(
             output_dir / "event-summary.md",
@@ -127,30 +112,35 @@ def write_event_run_assets(
     ]
 
     if ASSET_TRACKED_URL in selected_assets:
-        paths.append(write_text(output_dir / "campaign-url.txt", campaign_url))
+        paths.append(
+            write_text(
+                output_dir / "campaign-url.txt",
+                events.event_tracking_urls_text(tracking_urls),
+            )
+        )
     if ASSET_QR_CODE in selected_assets:
         qr_path = output_dir / "qr-code.png"
-        qr_code_generator.create_qr_code(campaign_url).save(qr_path)
+        qr_code_generator.create_qr_code(tracking_urls["qr_code"]).save(qr_path)
         paths.append(qr_path)
     if ASSET_EMAIL in selected_assets:
         paths.append(
             write_text(
                 output_dir / "email-sequence.md",
-                events.event_email_sequence(brief, campaign_url),
+                events.event_email_sequence(brief, tracking_urls["email"]),
             )
         )
     if ASSET_SOCIAL in selected_assets:
         paths.append(
             write_text(
                 output_dir / "social-posts.md",
-                events.event_social_posts(brief, campaign_url),
+                events.event_social_posts(brief, tracking_urls),
             )
         )
     if ASSET_LANDING_PAGE in selected_assets:
         paths.append(
             write_text(
                 output_dir / "landing-page-copy.md",
-                events.event_landing_page_copy(brief, campaign_url),
+                events.event_landing_page_copy(brief, tracking_urls["landing_page"]),
             )
         )
     return paths
@@ -163,7 +153,7 @@ def write_campaign_run_assets(
 ) -> list[Path]:
     brand_voice = load_brand_voice()
     source_material = campaigns.campaign_source_material(brief, "")
-    campaign_url = campaigns.build_campaign_url(brief)
+    tracking_urls = campaigns.campaign_tracking_urls(brief)
     paths = [
         write_text(
             output_dir / "campaign-summary.md",
@@ -174,10 +164,15 @@ def write_campaign_run_assets(
     ]
 
     if ASSET_TRACKED_URL in selected_assets:
-        paths.append(write_text(output_dir / "campaign-url.txt", campaign_url))
+        paths.append(
+            write_text(
+                output_dir / "campaign-url.txt",
+                campaigns.campaign_tracking_urls_text(tracking_urls),
+            )
+        )
     if ASSET_QR_CODE in selected_assets:
         qr_path = output_dir / "qr-code.png"
-        qr_code_generator.create_qr_code(campaign_url).save(qr_path)
+        qr_code_generator.create_qr_code(tracking_urls["qr_code"]).save(qr_path)
         paths.append(qr_path)
     if ASSET_EMAIL in selected_assets:
         email_copy = campaigns.ai_or_fallback(
@@ -187,8 +182,8 @@ def write_campaign_run_assets(
                 purpose=str(brief["goal"]),
                 brand_voice=brand_voice,
             ),
-            fallback=campaigns.fallback_email_copy(brief, campaign_url),
-        ).replace("[url here]", campaign_url)
+            fallback=campaigns.fallback_email_copy(brief, tracking_urls["email"]),
+        ).replace("[url here]", tracking_urls["email"])
         paths.append(write_text(output_dir / "email-drafts.md", email_copy))
     if ASSET_SOCIAL in selected_assets:
         social_copy = campaigns.ai_or_fallback(
@@ -199,9 +194,9 @@ def write_campaign_run_assets(
             user_prompt=campaigns.social_prompt(
                 source_material,
                 brand_voice,
-                campaign_url,
+                tracking_urls,
             ),
-            fallback=campaigns.fallback_social_copy(brief, campaign_url),
+            fallback=campaigns.fallback_social_copy(brief, tracking_urls["linkedin"]),
         )
         paths.append(write_text(output_dir / "social-posts.md", social_copy))
     if ASSET_LANDING_PAGE in selected_assets:
@@ -218,12 +213,18 @@ def write_campaign_run_assets(
                 main_benefit=str(brief.get("offer") or brief["goal"]),
                 primary_cta=str(brief["cta"]),
                 credibility="",
-                must_include=f"Use this campaign URL: {campaign_url}",
+                must_include=(
+                    "Use this landing page tracking URL: "
+                    f"{tracking_urls['landing_page']}"
+                ),
                 avoid="",
                 brand_voice=brand_voice,
             ),
-            fallback=campaigns.fallback_landing_copy(brief, campaign_url),
-        ).replace("[url here]", campaign_url)
+            fallback=campaigns.fallback_landing_copy(
+                brief,
+                tracking_urls["landing_page"],
+            ),
+        ).replace("[url here]", tracking_urls["landing_page"])
         paths.append(write_text(output_dir / "landing-page-copy.md", landing_copy))
     if ASSET_PROJECT_PLAN in selected_assets:
         project_plan_path = campaigns.write_project_plan(brief, output_dir)

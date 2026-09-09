@@ -83,12 +83,47 @@ https://example.com/register
 
         self.assertIn("Architect, Bridger, and Catalyst", email)
         self.assertIn("Mastercard, Pfizer", email)
+        self.assertIn("utm_source=email", email)
+        self.assertNotIn("utm_source=linkedin", email)
         self.assertNotIn("https://example.com/register.", email)
         self.assertIn("## LinkedIn Post 1", social)
         self.assertIn("Read more:", social)
         self.assertIn("hashtag#Innovation", social)
+        self.assertIn("utm_source=linkedin", social)
+        self.assertIn("utm_source=facebook", social)
         self.assertNotIn("1. Many leaders", social)
+        self.assertIn("utm_source=landing_page", landing)
         self.assertIn("Build a Culture of Co-creation", landing)
+
+    def test_event_tracking_url_file_lists_channel_specific_urls(self):
+        brief = {
+            "event_name": "Spring Workshop",
+            "event_date": "2026-09-17",
+            "audience": "Small business owners",
+            "goal": "Drive registrations",
+            "cta": "Register Now",
+            "registration_url": "https://example.com/register",
+        }
+
+        with TemporaryDirectory() as directory:
+            output_dir = Path(directory) / "outputs"
+            create.write_event_run_assets(
+                brief,
+                output_dir,
+                [create.ASSET_TRACKED_URL, create.ASSET_QR_CODE],
+            )
+            tracked_urls = (output_dir / "campaign-url.txt").read_text(
+                encoding="utf-8"
+            )
+
+        self.assertIn("Email:", tracked_urls)
+        self.assertIn("utm_source=email", tracked_urls)
+        self.assertIn("LinkedIn:", tracked_urls)
+        self.assertIn("utm_source=linkedin", tracked_urls)
+        self.assertIn("Facebook:", tracked_urls)
+        self.assertIn("utm_source=facebook", tracked_urls)
+        self.assertIn("QR code:", tracked_urls)
+        self.assertIn("utm_source=qr_code", tracked_urls)
 
     def test_event_renderers_normalize_bloated_existing_brief(self):
         source_material = """

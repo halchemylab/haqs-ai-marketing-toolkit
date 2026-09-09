@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
+from haqs_toolkit.generators.campaign_url_builder import add_utm_parameters
 from haqs_toolkit.runs import write_quality_check
 from haqs_toolkit.utils.marketing import load_brand_voice, read_url
 
@@ -64,6 +65,13 @@ DATE_LINE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 URL_PATTERN = re.compile(r"https?://[^\s)>\]]+")
+EVENT_TRACKING_CHANNELS = {
+    "email": ("email", "email"),
+    "linkedin": ("linkedin", "social"),
+    "facebook": ("facebook", "social"),
+    "landing_page": ("landing_page", "owned"),
+    "qr_code": ("qr_code", "offline"),
+}
 
 
 class EventBriefError(ValueError):
@@ -337,6 +345,51 @@ def normalized_event_brief(brief: dict[str, object]) -> dict[str, object]:
     return normalized
 
 
+def event_campaign_name(brief: dict[str, object]) -> str:
+    return (
+        str(brief.get("utm_campaign") or brief["event_name"])
+        .strip()
+        .lower()
+        .replace(" ", "_")
+    )
+
+
+def build_event_tracking_url(
+    brief: dict[str, object],
+    source: str,
+    medium: str,
+    content: str = "",
+) -> str:
+    return add_utm_parameters(
+        landing_page_url=str(brief["registration_url"]),
+        source=source,
+        medium=medium,
+        campaign_name=event_campaign_name(brief),
+        campaign_content=content,
+    )
+
+
+def event_tracking_urls(brief: dict[str, object]) -> dict[str, str]:
+    return {
+        channel: build_event_tracking_url(brief, source, medium)
+        for channel, (source, medium) in EVENT_TRACKING_CHANNELS.items()
+    }
+
+
+def event_tracking_urls_text(tracking_urls: dict[str, str]) -> str:
+    labels = {
+        "email": "Email",
+        "linkedin": "LinkedIn",
+        "facebook": "Facebook",
+        "landing_page": "Landing page",
+        "qr_code": "QR code",
+    }
+    lines = ["# Event Tracking URLs", ""]
+    for channel in EVENT_TRACKING_CHANNELS:
+        lines.append(f"- {labels[channel]}: {tracking_urls[channel]}")
+    return "\n".join(lines)
+
+
 def event_datetime_text(brief: dict[str, object]) -> str:
     brief = normalized_event_brief(brief)
     event_date = str(brief.get("event_date") or "").strip()
@@ -463,9 +516,18 @@ roles that help innovation last.
 """.strip()
 
 
-def event_social_posts(brief: dict[str, object], registration_url: str) -> str:
+def event_social_posts(
+    brief: dict[str, object],
+    tracking_urls: dict[str, str] | str,
+) -> str:
     brief = normalized_event_brief(brief)
     event_name = str(brief["event_name"])
+    if isinstance(tracking_urls, dict):
+        linkedin_url = tracking_urls["linkedin"]
+        facebook_url = tracking_urls["facebook"]
+    else:
+        linkedin_url = tracking_urls
+        facebook_url = tracking_urls
     return f"""
 # Social Posts: {event_name}
 
@@ -484,7 +546,7 @@ Emily Tedards will explore this idea in Genius at Scale, including the three
 leadership roles behind scalable innovation: the Architect, the Bridger, and the
 Catalyst.
 
-Read more: {registration_url}
+Read more: {linkedin_url}
 
 hashtag#Innovation hashtag#Leadership hashtag#CoCreation
 hashtag#OrganizationalDesign hashtag#HalchemyLabs
@@ -503,7 +565,7 @@ that let many people contribute to the work.
 That is the focus of Emily Tedards' upcoming session, Genius at Scale: How to
 Lead Innovation That Lasts.
 
-Read more: {registration_url}
+Read more: {linkedin_url}
 
 hashtag#Innovation hashtag#LeadershipDevelopment hashtag#Strategy
 hashtag#Creativity hashtag#HalchemyLabs
@@ -524,10 +586,18 @@ Emily Tedards will unpack this framework in Genius at Scale, drawing on research
 and stories from global organizations including Mastercard, Pfizer, and Procter
 & Gamble.
 
-Read more: {registration_url}
+Read more: {linkedin_url}
 
 hashtag#Innovation hashtag#Leadership hashtag#Management
 hashtag#BusinessStrategy hashtag#HalchemyLabs
+
+## Facebook Post
+
+Innovation can be hard to sustain when teams are under pressure to force better
+ideas faster. Emily Tedards' Genius at Scale session looks at a different path:
+building the conditions where co-creation can thrive.
+
+Learn more: {facebook_url}
 """.strip()
 
 
@@ -577,14 +647,18 @@ Reserve your spot for the live session.
 def write_event_assets(brief: dict[str, object], output_dir: Path) -> list[Path]:
     print(f"Preparing output directory: {output_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
-    registration_url = str(brief.get("registration_url", "[url here]"))
     brand_voice = load_brand_voice()
+    tracking_urls = event_tracking_urls(brief)
 
     assets = {
         "event-brief-summary.md": event_summary_markdown(brief, brand_voice),
-        "email-sequence.md": event_email_sequence(brief, registration_url),
-        "social-posts.md": event_social_posts(brief, registration_url),
-        "landing-page-copy.md": event_landing_page_copy(brief, registration_url),
+        "campaign-url.txt": event_tracking_urls_text(tracking_urls),
+        "email-sequence.md": event_email_sequence(brief, tracking_urls["email"]),
+        "social-posts.md": event_social_posts(brief, tracking_urls),
+        "landing-page-copy.md": event_landing_page_copy(
+            brief,
+            tracking_urls["landing_page"],
+        ),
     }
 
     paths = []

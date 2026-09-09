@@ -47,6 +47,14 @@ REQUIRED_FIELDS = [
     "landing_page_url",
 ]
 DEFAULT_CHANNELS = ["email", "linkedin", "facebook", "qr_code"]
+CAMPAIGN_TRACKING_CHANNELS = {
+    "email": ("email", "email"),
+    "linkedin": ("linkedin", "social"),
+    "facebook": ("facebook", "social"),
+    "x": ("x", "social"),
+    "landing_page": ("landing_page", "owned"),
+    "qr_code": ("qr_code", "offline"),
+}
 CAMPAIGN_TYPE_TO_PLAN_TYPE = {
     "event": "webinar",
     "webinar": "webinar",
@@ -170,23 +178,61 @@ def ai_or_fallback(system_prompt: str, user_prompt: str, fallback: str) -> str:
 
 
 def build_campaign_url(brief: dict[str, object]) -> str:
-    landing_page_url = str(brief["landing_page_url"]).strip()
-    source = str(brief.get("utm_source") or "campaign").strip()
-    medium = str(brief.get("utm_medium") or "marketing").strip()
-    campaign_name = (
+    return build_campaign_tracking_url(
+        brief,
+        source=str(brief.get("utm_source") or "campaign").strip(),
+        medium=str(brief.get("utm_medium") or "marketing").strip(),
+        content=str(brief.get("utm_content") or "").strip(),
+    )
+
+
+def campaign_tracking_name(brief: dict[str, object]) -> str:
+    return (
         str(brief.get("utm_campaign") or brief["campaign_name"])
         .strip()
         .lower()
         .replace(" ", "_")
     )
-    campaign_content = str(brief.get("utm_content") or "").strip()
+
+
+def build_campaign_tracking_url(
+    brief: dict[str, object],
+    source: str,
+    medium: str,
+    content: str = "",
+) -> str:
+    campaign_name = (
+        str(brief.get("utm_campaign") or campaign_tracking_name(brief)).strip()
+    )
     return campaign_url_builder.add_utm_parameters(
-        landing_page_url=landing_page_url,
+        landing_page_url=str(brief["landing_page_url"]).strip(),
         source=source,
         medium=medium,
         campaign_name=campaign_name,
-        campaign_content=campaign_content,
+        campaign_content=content,
     )
+
+
+def campaign_tracking_urls(brief: dict[str, object]) -> dict[str, str]:
+    return {
+        channel: build_campaign_tracking_url(brief, source, medium)
+        for channel, (source, medium) in CAMPAIGN_TRACKING_CHANNELS.items()
+    }
+
+
+def campaign_tracking_urls_text(tracking_urls: dict[str, str]) -> str:
+    labels = {
+        "email": "Email",
+        "linkedin": "LinkedIn",
+        "facebook": "Facebook",
+        "x": "X",
+        "landing_page": "Landing page",
+        "qr_code": "QR code",
+    }
+    lines = ["# Campaign Tracking URLs", ""]
+    for channel in CAMPAIGN_TRACKING_CHANNELS:
+        lines.append(f"- {labels[channel]}: {tracking_urls[channel]}")
+    return "\n".join(lines)
 
 
 def fallback_email_copy(brief: dict[str, object], campaign_url: str) -> str:
@@ -244,8 +290,9 @@ def fallback_social_copy(brief: dict[str, object], campaign_url: str) -> str:
 def social_prompt(
     source_material: str,
     brand_voice: str,
-    campaign_url: str,
+    tracking_urls: dict[str, str],
 ) -> str:
+    url_lines = campaign_tracking_urls_text(tracking_urls)
     return f"""
 {content_repurposer.brand_voice_prompt_block(brand_voice)}
 
@@ -257,9 +304,11 @@ Requirements:
 - Write 5 short X posts.
 - Preserve factual details from the source material.
 - Do not invent dates, speakers, prices, venues, statistics, or promises.
-- Use this exact campaign URL anywhere a destination link is needed:
-  {campaign_url}
+- Use the channel-specific tracking URL for each platform.
 - Return Markdown only.
+
+Tracking URLs:
+{url_lines}
 
 Source material:
 {source_material}
@@ -367,7 +416,7 @@ def write_campaign_assets(
     notes = source_notes(campaign_dir)
     brand_voice = load_brand_voice()
     source_material = campaign_source_material(brief, notes)
-    campaign_url = build_campaign_url(brief)
+    tracking_urls = campaign_tracking_urls(brief)
     channels = normalized_channels(brief)
 
     paths: list[Path] = []
@@ -382,7 +431,12 @@ def write_campaign_assets(
             f"## Source Notes\n\n{notes or 'No source notes provided.'}",
         )
     )
-    paths.append(write_text(output_dir / "campaign-url.txt", campaign_url))
+    paths.append(
+        write_text(
+            output_dir / "campaign-url.txt",
+            campaign_tracking_urls_text(tracking_urls),
+        )
+    )
 
     email_copy = ai_or_fallback(
         system_prompt="You are a precise marketing email copywriter.",
@@ -391,16 +445,16 @@ def write_campaign_assets(
             purpose=str(brief["goal"]),
             brand_voice=brand_voice,
         ),
-        fallback=fallback_email_copy(brief, campaign_url),
-    ).replace("[url here]", campaign_url)
+        fallback=fallback_email_copy(brief, tracking_urls["email"]),
+    ).replace("[url here]", tracking_urls["email"])
     paths.append(write_text(output_dir / "email-drafts.md", email_copy))
 
     social_copy = ai_or_fallback(
         system_prompt=(
             "You are a precise marketing strategist and content repurposing assistant."
         ),
-        user_prompt=social_prompt(source_material, brand_voice, campaign_url),
-        fallback=fallback_social_copy(brief, campaign_url),
+        user_prompt=social_prompt(source_material, brand_voice, tracking_urls),
+        fallback=fallback_social_copy(brief, tracking_urls["linkedin"]),
     )
     paths.append(write_text(output_dir / "social-posts.md", social_copy))
 
@@ -417,17 +471,20 @@ def write_campaign_assets(
             main_benefit=str(brief.get("offer") or brief["goal"]),
             primary_cta=str(brief["cta"]),
             credibility="",
-            must_include=f"Use this campaign URL: {campaign_url}",
+            must_include=(
+                "Use this landing page tracking URL: "
+                f"{tracking_urls['landing_page']}"
+            ),
             avoid="",
             brand_voice=brand_voice,
         ),
-        fallback=fallback_landing_copy(brief, campaign_url),
-    ).replace("[url here]", campaign_url)
+        fallback=fallback_landing_copy(brief, tracking_urls["landing_page"]),
+    ).replace("[url here]", tracking_urls["landing_page"])
     paths.append(write_text(output_dir / "landing-page-copy.md", landing_copy))
 
     if "qr_code" in channels or "qr" in channels:
         qr_path = output_dir / "qr-code.png"
-        qr_code_generator.create_qr_code(campaign_url).save(qr_path)
+        qr_code_generator.create_qr_code(tracking_urls["qr_code"]).save(qr_path)
         paths.append(qr_path)
 
     project_plan_path = write_project_plan(brief, output_dir)

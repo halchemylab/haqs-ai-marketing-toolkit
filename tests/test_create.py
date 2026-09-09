@@ -40,17 +40,23 @@ class CreateFlowTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             with patch("haqs_toolkit.runs.datetime") as fake_datetime:
                 fake_datetime.now.return_value = datetime(2026, 9, 9, 13, 45)
-                run_dir = create.run_creation(
-                    brief=brief,
-                    job_type=create.JOB_EVENT,
-                    scope=create.SCOPE_SELECTED,
-                    selected_assets=[
-                        create.ASSET_TRACKED_URL,
-                        create.ASSET_QR_CODE,
-                        create.ASSET_SOCIAL,
-                    ],
-                    runs_dir=Path(directory),
-                )
+                with patch(
+                    "haqs_toolkit.create.qr_code_generator.create_qr_code"
+                ) as create_qr_code:
+                    create_qr_code.return_value.save.side_effect = (
+                        lambda path: Path(path).write_bytes(b"qr")
+                    )
+                    run_dir = create.run_creation(
+                        brief=brief,
+                        job_type=create.JOB_EVENT,
+                        scope=create.SCOPE_SELECTED,
+                        selected_assets=[
+                            create.ASSET_TRACKED_URL,
+                            create.ASSET_QR_CODE,
+                            create.ASSET_SOCIAL,
+                        ],
+                        runs_dir=Path(directory),
+                    )
 
             self.assertTrue((run_dir / "brief.json").exists())
             self.assertTrue((run_dir / "outputs" / "campaign-url.txt").exists())
@@ -59,6 +65,20 @@ class CreateFlowTests(unittest.TestCase):
             self.assertFalse((run_dir / "outputs" / "email-sequence.md").exists())
             self.assertTrue((run_dir / "quality-check.md").exists())
             self.assertTrue((run_dir / "packet-index.md").exists())
+
+            tracked_urls = (run_dir / "outputs" / "campaign-url.txt").read_text(
+                encoding="utf-8"
+            )
+            social = (run_dir / "outputs" / "social-posts.md").read_text(
+                encoding="utf-8"
+            )
+            self.assertIn("utm_source=qr_code", tracked_urls)
+            self.assertIn("utm_source=linkedin", social)
+            self.assertIn("utm_source=facebook", social)
+            create_qr_code.assert_called_once()
+            qr_url = create_qr_code.call_args.args[0]
+            self.assertIn("utm_source=qr_code", qr_url)
+            self.assertNotIn("utm_source=linkedin", qr_url)
 
             quality_report = (run_dir / "quality-check.md").read_text(
                 encoding="utf-8"
