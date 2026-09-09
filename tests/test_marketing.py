@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from utils import marketing
+from haqs_toolkit.utils import marketing
 
 
 class MarketingRoiTests(unittest.TestCase):

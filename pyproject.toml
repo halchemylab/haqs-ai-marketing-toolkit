@@ -20,7 +20,6 @@ packages = [
     "haqs_toolkit",
     "haqs_toolkit.generators",
     "haqs_toolkit.utils",
-    "utils",
 ]
 
 [tool.setuptools.package-data]

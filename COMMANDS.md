@@ -7,7 +7,7 @@ Use this as the starting point when deciding what to run.
 | Need | Run |
 | --- | --- |
 | Create a complete packet or selected assets | `haqs-create` |
-| Create selected event assets from an existing brief | `haqs-create --scope selected --job-type event --brief events/<event-slug>/brief.json --assets tracked_url,qr_code,social` |
+| Create selected event assets from an existing brief | `haqs-create --scope selected --job-type event --brief path/to/event-brief.json --assets tracked_url,qr_code,social` |
 | Create a complete campaign packet from an existing brief | `haqs-create --scope complete --job-type campaign --brief campaigns/<campaign-slug>/brief.json` |
 | Open the older individual-generator menu | `haqs-toolkit` |
 

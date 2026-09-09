@@ -106,16 +106,14 @@ brand_voice.txt             Editable global voice for AI copy.
 haqs_toolkit/               Packaged CLI, workflows, generators, and helpers.
 haqs_toolkit/data/          Packaged data templates used by generators.
 campaigns/                  Recommended home for reusable campaign packets.
-events/                     Event packet briefs, inputs, and outputs.
 runs/                       One folder per marketing creation run.
 docs/                       Usage notes and script guidance.
-scripts/                    Legacy wrappers.
 tests/                      Unit tests for generators and shared helpers.
 output/                     Ignored generated assets and ROI logs.
 ```
 
-`campaigns/` may not exist in a fresh checkout until the first campaign packet
-is created.
+`campaigns/`, `runs/`, and `output/` may not exist in a fresh checkout. They
+are created when needed.
 
 ## Brand Voice
 
