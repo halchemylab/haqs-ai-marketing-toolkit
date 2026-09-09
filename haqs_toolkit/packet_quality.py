@@ -176,7 +176,7 @@ def format_report(issues: list[QualityIssue], base_dir: Path) -> str:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Scan generated packet outputs for pre-publish quality issues.",
-        epilog="Example: haqs-check campaigns/fall-workshop",
+        epilog="Quality checks are run automatically by haqs-create.",
     )
     parser.add_argument(
         "path",

@@ -185,7 +185,7 @@ haqs-create
 
 Use `haqs-create` to create a complete packet or selected assets in one run
 folder. Use `haqs-toolkit` only when you want the older menu of individual
-generators. Legacy `python <script>.py` wrappers live in `scripts/legacy/`.
+generators.
 
 Create selected assets from an existing event brief:
 

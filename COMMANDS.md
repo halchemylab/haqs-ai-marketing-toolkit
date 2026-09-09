@@ -72,10 +72,3 @@ python -m haqs_toolkit.generators.project_plan_builder --campaign-name "Fall Lau
 
 python -m haqs_toolkit.generators.roi_report --log-path output/roi/automation_roi.csv
 ```
-
-## Legacy Wrappers
-
-Most old root-level wrappers live in `scripts/legacy/` and are kept only for
-older habits and automation. The event marketing asset builder is available at
-the repo root as `marketing_event_ai_builder.py`; prefer the commands above for
-new work.
