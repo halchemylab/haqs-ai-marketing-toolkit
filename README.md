@@ -107,7 +107,6 @@ haqs_toolkit/               Packaged CLI, workflows, generators, and helpers.
 haqs_toolkit/data/          Packaged data templates used by generators.
 campaigns/                  Recommended home for reusable campaign packets.
 runs/                       One folder per marketing creation run.
-docs/                       Usage notes and script guidance.
 tests/                      Unit tests for generators and shared helpers.
 output/                     Ignored generated assets and ROI logs.
 ```
