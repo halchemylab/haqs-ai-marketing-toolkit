@@ -6,11 +6,10 @@ Use this as the starting point when deciding what to run.
 
 | Need | Run |
 | --- | --- |
-| Choose from a menu of one-off tools | `haqs-toolkit` |
-| Create a new campaign packet brief | `haqs-campaign --new campaigns/<campaign-slug>` |
-| Generate a full campaign packet | `haqs-campaign campaigns/<campaign-slug>` |
-| Generate an event packet | `haqs-event events/<event-slug>` |
-| Check generated packet files before publishing | `haqs-check <packet-or-output-dir>` |
+| Create a complete packet or selected assets | `haqs-create` |
+| Create selected event assets from an existing brief | `haqs-create --scope selected --job-type event --brief events/<event-slug>/brief.json --assets tracked_url,qr_code,social` |
+| Create a complete campaign packet from an existing brief | `haqs-create --scope complete --job-type campaign --brief campaigns/<campaign-slug>/brief.json` |
+| Open the older individual-generator menu | `haqs-toolkit` |
 
 Install the commands first when needed:
 
@@ -18,24 +17,48 @@ Install the commands first when needed:
 pip install -e .
 ```
 
-## One-Off Tool Routing
+## Creation Model
 
-For one-off work, run `haqs-toolkit` and choose from the menu.
+Use `haqs-create` first. It asks:
 
-| Need | Menu Tool |
+```text
+What are you creating?
+1. Complete packet
+2. Selected assets
+
+What is this for?
+1. Event
+2. Campaign / offer
+```
+
+Each creation run saves one folder:
+
+```text
+runs/<job-slug>-<job-type>-<scope>-YYYY-MM-DD-HHMM/
+  brief.json
+  outputs/
+  packet-index.md
+  quality-check.md
+```
+
+Quality checks run automatically after assets are generated.
+
+## Selected Assets
+
+For selected asset work, choose one or more assets from the same brief.
+
+| Asset | Key |
 | --- | --- |
-| Add UTM tracking to a URL | Campaign URL Builder |
-| Turn source material into social posts, hooks, quotes, and blurbs | Content Repurposer |
-| Generate three email drafts | Email Generator |
-| Generate landing page copy | Landing Page Copy Generator |
-| Build a campaign project plan | Project Plan Builder |
-| Generate a QR code PNG | QR Code Generator |
-| Format raw customer feedback as testimonials | Testimonial Formatter |
-| See estimated automation ROI | ROI Report |
+| Tracked URL | `tracked_url` |
+| QR code | `qr_code` |
+| Email sequence/drafts | `email` |
+| Social posts | `social` |
+| Landing page copy | `landing_page` |
+| Campaign project plan | `project_plan` |
 
 ## Direct Automation
 
-Use direct module commands when you want repeatable runs with flags:
+Use direct module commands when you only need a specific low-level generator:
 
 ```powershell
 python -m haqs_toolkit.generators.campaign_url_builder --landing-page-url https://example.com `

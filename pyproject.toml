@@ -28,9 +28,9 @@ packages = [
 
 [project.scripts]
 haqs-toolkit = "haqs_toolkit.cli:main"
+haqs-create = "haqs_toolkit.create:main"
 haqs-campaign = "haqs_toolkit.campaigns:main"
 haqs-event = "haqs_toolkit.events:main"
-haqs-check = "haqs_toolkit.packet_quality:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

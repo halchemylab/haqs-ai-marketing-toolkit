@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
+from haqs_toolkit.runs import write_quality_check
 from haqs_toolkit.utils.marketing import load_brand_voice
 
 RECOMMENDED_FIELDS = [
@@ -212,10 +213,15 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     print("Brief validation passed.")
     paths = write_event_assets(brief, output_dir)
+    if args.out is None:
+        quality_path, issues = write_quality_check(event_dir)
+        paths.append(quality_path)
 
     print(f"Generated {len(paths)} event files:")
     for path in paths:
         print(f"- {path}")
+    if args.out is None:
+        print(f"Quality issues found: {len(issues)}")
     print(
         "\nNext step: Review the event brief summary first, then edit the "
         "generated email, social, and landing page files before publishing."

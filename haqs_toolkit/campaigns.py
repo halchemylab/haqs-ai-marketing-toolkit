@@ -16,6 +16,7 @@ from haqs_toolkit.generators import (
     project_plan_builder,
     qr_code_generator,
 )
+from haqs_toolkit.runs import write_quality_check
 from haqs_toolkit.utils.marketing import (
     AiGenerationError,
     generate_text,
@@ -447,7 +448,11 @@ def generate_campaign_packet(
     ensure_campaign_packet_dirs(campaign_dir)
     brief = load_campaign_brief(campaign_dir / "brief.json")
     resolved_output_dir = output_dir or campaign_dir / "outputs"
-    return write_campaign_assets(brief, campaign_dir, resolved_output_dir)
+    paths = write_campaign_assets(brief, campaign_dir, resolved_output_dir)
+    if output_dir is None:
+        quality_path, _ = write_quality_check(campaign_dir)
+        paths.append(quality_path)
+    return paths
 
 
 def starter_brief(campaign_name: str) -> dict[str, object]:

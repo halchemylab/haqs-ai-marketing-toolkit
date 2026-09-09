@@ -12,23 +12,23 @@ main interface.
 Recommended daily flow:
 
 - Open Codex in this folder.
-- Describe the campaign, event, client task, or asset I need.
-- Ask Codex which script or workflow fits the job.
-- Let Codex run or update the scripts and organize the generated files.
+- Describe the campaign, event, client task, or assets I need.
+- Choose whether I need a complete packet or selected assets.
+- Let Codex run `haqs-create` and organize the generated files.
 - Review the generated files:
-  - Campaign packets write to `<campaign_dir>/outputs/`.
-  - Event packets write to `<event_dir>/outputs/`.
-  - One-off tools write to dated folders under `output/`.
+  - Each creation run writes to one folder under `runs/`.
+  - Each run includes `brief.json`, `outputs/`, `packet-index.md`, and
+    `quality-check.md`.
 - Move approved copy, URLs, QR codes, or plans into the final client or campaign
   workspace.
 
 Useful Codex prompts:
 
-- "Run the event pipeline for `events/demo-event`."
+- "Create selected assets for this event."
+- "Create a complete campaign packet."
 - "Turn this client feedback into testimonials."
 - "Build UTM links for this campaign."
 - "Generate landing page copy from this offer."
-- "Check this campaign packet before I publish it."
 - "Show me the ROI report."
 
 ## Choosing A Workflow
@@ -40,58 +40,64 @@ COMMANDS.md
 ```
 
 When using Codex, describe the outcome first and let Codex choose the command.
-Use this routing as the default decision guide:
-
-- Full reusable campaign brief -> `haqs-campaign`
-- Structured event brief under `events/<event-slug>/brief.json` -> `haqs-event`
-- Pre-publish packet review -> `haqs-check`
-- One-off asset such as a URL, QR code, email, testimonial, or ROI report ->
-  `haqs-toolkit`
-- Repeatable automation with known inputs -> a direct
-  `python -m haqs_toolkit.generators.<module>` command with flags
-
-Use a campaign packet when one brief should produce a full campaign set:
+The user-facing creation command is:
 
 ```powershell
-haqs-campaign --new campaigns/fall-workshop
-haqs-campaign campaigns/fall-workshop
+haqs-create
 ```
 
-The `campaigns/` folder is only a recommended location. It is created when you
-create your first campaign packet.
+Use `haqs-create` for the two normal marketing creation modes:
 
-Use an event packet when the work starts from `events/<event-slug>/brief.json`
-and needs predictable review files:
+- Complete packet: generate the recommended assets from one event or campaign
+  brief.
+- Selected assets: choose only the assets needed for the same event or campaign.
+
+Every creation run saves one folder:
+
+```text
+runs/<job-slug>-<job-type>-<scope>-YYYY-MM-DD-HHMM/
+  brief.json
+  outputs/
+  packet-index.md
+  quality-check.md
+```
+
+Examples:
+
+```text
+runs/demo-growth-workshop-event-complete-2026-09-09-1332/
+runs/demo-growth-workshop-event-selected-2026-09-09-1345/
+runs/fall-lead-magnet-campaign-complete-2026-09-09-1401/
+```
+
+Complete event packets generate event summary, tracked registration URL, QR
+code, email sequence, social posts, landing page copy, packet index, and quality
+check.
+
+Complete campaign packets generate campaign summary, tracked campaign URL, QR
+code, email drafts, social posts, landing page copy, project plan when a launch
+date is available, packet index, and quality check.
+
+Selected asset runs use the same brief but generate only the chosen outputs,
+such as tracked URL plus QR code, or email sequence plus social posts.
+
+Use non-interactive flags for repeatable creation:
 
 ```powershell
-haqs-event events/demo-event
+haqs-create --scope selected --job-type event --brief events/demo-event/brief.json `
+  --assets tracked_url,qr_code,social
 ```
 
-Use the interactive toolkit when you only need one asset, such as a UTM link,
-email draft, QR code, project plan, testimonial, or ROI report:
-
-```powershell
-haqs-toolkit
-```
-
-Use non-interactive flags for repeatable automation:
+Direct generator commands are still available for automation:
 
 ```powershell
 python -m haqs_toolkit.generators.campaign_url_builder --landing-page-url https://example.com `
   --source linkedin --medium social --campaign-name fall_launch
 ```
 
-Run a pre-publish quality check before moving generated copy into a final
-workspace:
-
-```powershell
-haqs-check campaigns/fall-workshop
-haqs-check events/demo-event/outputs
-```
-
-The checker scans generated Markdown and text files for unresolved placeholders,
-sample URLs such as `example.com`, missing CTA links, empty sections, and
-generation fallback notes.
+Quality checks run automatically after creation. The checker scans generated
+Markdown and text files for unresolved placeholders, sample URLs such as
+`example.com`, missing CTA links, empty sections, and generation fallback notes.
 
 ## File Structure
 
@@ -101,6 +107,7 @@ haqs_toolkit/               Packaged CLI, workflows, generators, and helpers.
 haqs_toolkit/data/          Packaged data templates used by generators.
 campaigns/                  Recommended home for reusable campaign packets.
 events/                     Event packet briefs, inputs, and outputs.
+runs/                       One folder per marketing creation run.
 docs/                       Usage notes and script guidance.
 marketing_event_ai_builder.py
                             Root-level event marketing asset builder.
@@ -157,9 +164,9 @@ PowerShell session:
 $env:HOURLY_RATE="75"
 ```
 
-One-off generator files are saved in dated category folders under `output/`, for
-example `output/2026-08-05/emails/` or `output/2026-08-05/qr_codes/`. Campaign
-and event packet workflows write to their packet `outputs/` folders by default.
+Marketing creation runs are saved under `runs/`. Direct generator files are
+still saved in dated category folders under `output/`, for example
+`output/2026-08-05/emails/` or `output/2026-08-05/qr_codes/`.
 
 To save generated files somewhere else for the current PowerShell session:
 
@@ -173,42 +180,27 @@ The primary interface is the installed console commands:
 
 ```powershell
 pip install -e .
-haqs-toolkit
+haqs-create
 ```
 
-Use `haqs-toolkit` to launch the interactive menu for individual generators.
-Legacy `python <script>.py` wrappers live in `scripts/legacy/`, but new
-workflows should prefer the packaged commands.
+Use `haqs-create` to create a complete packet or selected assets in one run
+folder. Use `haqs-toolkit` only when you want the older menu of individual
+generators. Legacy `python <script>.py` wrappers live in `scripts/legacy/`.
 
-Generate a complete campaign packet from one brief:
+Create selected assets from an existing event brief:
 
 ```powershell
-haqs-campaign --new campaigns/fall-workshop
-haqs-campaign campaigns/fall-workshop
+haqs-create --scope selected --job-type event --brief events/demo-event/brief.json `
+  --assets tracked_url,qr_code,social
 ```
 
-The campaign packet workflow creates a starter `brief.json`, optional source
-notes, and review-ready outputs such as email drafts, social posts, landing page
-copy, a campaign URL, QR code, project plan, and `packet-index.md`.
-
-Generate a predictable event asset packet from `events/<event-slug>/brief.json`:
+Create a complete campaign packet from an existing campaign brief:
 
 ```powershell
-python marketing_event_ai_builder.py events/demo-event
+haqs-create --scope complete --job-type campaign --brief campaigns/fall-workshop/brief.json
 ```
 
-If the package is installed, the same runner is available as:
-
-```powershell
-haqs-event events/demo-event
-```
-
-Check a generated campaign or event packet before publishing:
-
-```powershell
-haqs-check campaigns/fall-workshop
-haqs-check events/demo-event
-```
+Each run automatically writes `packet-index.md` and `quality-check.md`.
 
 Repurpose pasted source material into several marketing content formats:
 
