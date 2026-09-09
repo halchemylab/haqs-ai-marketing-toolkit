@@ -164,8 +164,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Generate predictable marketing files from an event packet.",
         epilog=(
-            "Example: python marketing_event_ai_builder.py "
-            "events/<event-slug> --out events/<event-slug>/outputs"
+            "Examples: python marketing_event_ai_builder.py or "
+            "python marketing_event_ai_builder.py events/<event-slug> "
+            "--out events/<event-slug>/outputs"
         ),
     )
     parser.add_argument(
@@ -177,7 +178,10 @@ def build_parser() -> argparse.ArgumentParser:
         "event_dir",
         type=Path,
         nargs="?",
-        help="Path to an event packet directory containing brief.json.",
+        help=(
+            "Path to an event packet directory containing brief.json. "
+            "Omit it to answer prompts and create a run folder automatically."
+        ),
     )
     parser.add_argument(
         "--out",
@@ -197,7 +201,25 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.event_dir is None:
-        parser.error("event_dir is required unless --list-fields is used.")
+        if args.out is not None:
+            parser.error("--out requires an event_dir.")
+
+        from haqs_toolkit import create
+
+        brief = create.brief_from_inputs(create.JOB_EVENT)
+        try:
+            validate_event_brief(brief)
+        except EventBriefError as exc:
+            print(f"Error: {exc}")
+            return 1
+
+        create.run_creation(
+            brief=brief,
+            job_type=create.JOB_EVENT,
+            scope=create.SCOPE_COMPLETE,
+            selected_assets=create.EVENT_COMPLETE_ASSETS.copy(),
+        )
+        return 0
 
     event_dir = args.event_dir
     brief_path = event_dir / "brief.json"
