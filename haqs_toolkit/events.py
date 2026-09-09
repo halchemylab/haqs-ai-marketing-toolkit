@@ -161,18 +161,67 @@ def first_paragraph(lines: list[str]) -> str:
         stripped = line.strip()
         if paragraph and not stripped:
             break
+        if paragraph and stripped.lower().startswith(("about the author", "join ")):
+            break
+        if URL_PATTERN.fullmatch(stripped):
+            continue
         if stripped:
             paragraph.append(stripped)
     return " ".join(paragraph)
 
 
-def audience_from_lines(lines: list[str]) -> str:
+def section_paragraph_after_heading(lines: list[str], heading: str) -> str:
+    normalized_heading = heading.strip().lower()
     for index, line in enumerate(lines):
-        if line.strip().lower().startswith("ideal participants"):
-            audience = first_paragraph(lines[index + 1 :])
-            if audience:
-                return audience
-    return "Event attendees"
+        if line.strip().lower().startswith(normalized_heading):
+            return first_paragraph(lines[index + 1 :])
+    return ""
+
+
+def audience_from_lines(lines: list[str]) -> str:
+    return section_paragraph_after_heading(lines, "ideal participants") or (
+        "Current and aspiring leaders"
+    )
+
+
+def offer_from_lines(lines: list[str]) -> str:
+    details = []
+    stop_headings = {
+        "practical tools and strategies",
+        "ideal participants",
+        "about the author",
+    }
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            if details:
+                break
+            continue
+        lowered = stripped.lower()
+        if lowered.startswith("event will begin in") or lowered == "displayed image":
+            continue
+        if any(lowered.startswith(heading) for heading in stop_headings):
+            break
+        details.append(stripped)
+    return " ".join(details)
+
+
+def tools_from_lines(lines: list[str]) -> list[str]:
+    tools = []
+    in_section = False
+    for line in lines:
+        stripped = line.strip()
+        lowered = stripped.lower()
+        if lowered.startswith("practical tools and strategies"):
+            in_section = True
+            continue
+        if in_section and lowered.startswith(
+            ("ideal participants", "about the author")
+        ):
+            break
+        if in_section and ":" in stripped:
+            tools.append(stripped)
+    return tools
 
 
 def parse_event_details(text: str) -> dict[str, object]:
@@ -198,15 +247,24 @@ def parse_event_details(text: str) -> dict[str, object]:
             break
 
     if date_line_index >= 0:
-        body_lines = meaningful_lines[date_line_index + 1 :]
+        date_line = meaningful_lines[date_line_index]
+        body_start = next(
+            (
+                index + 1
+                for index, line in enumerate(lines)
+                if line.strip() == date_line
+            ),
+            1,
+        )
+        body_lines = lines[body_start:]
     else:
-        body_lines = meaningful_lines[1:]
+        body_lines = lines[1:]
     body_lines = [
         line
         for line in body_lines
         if not line.lower().startswith("event will begin in")
     ]
-    offer = first_paragraph(body_lines)
+    offer = offer_from_lines(body_lines)
     urls = URL_PATTERN.findall(text)
     registration_url = urls[0].rstrip(".,") if urls else ""
 
@@ -219,6 +277,7 @@ def parse_event_details(text: str) -> dict[str, object]:
         "audience": audience_from_lines(body_lines),
         "goal": f"Drive registrations for {event_name}",
         "offer": offer,
+        "takeaways": tools_from_lines(body_lines),
         "cta": "Register Now",
         "registration_url": registration_url,
         "tone": "Clear and practical",
@@ -260,50 +319,272 @@ def brief_text(brief: dict[str, object]) -> str:
     return "\n".join(lines)
 
 
+def normalized_event_brief(brief: dict[str, object]) -> dict[str, object]:
+    source_material = str(brief.get("source_material") or "").strip()
+    if not source_material:
+        return brief
+
+    try:
+        parsed = parse_event_details(source_material)
+    except EventBriefError:
+        return brief
+
+    normalized = brief.copy()
+    for key in ["audience", "offer", "takeaways"]:
+        value = parsed.get(key)
+        if value:
+            normalized[key] = value
+    return normalized
+
+
+def event_datetime_text(brief: dict[str, object]) -> str:
+    brief = normalized_event_brief(brief)
+    event_date = str(brief.get("event_date") or "").strip()
+    try:
+        date_text = datetime.strptime(event_date, "%Y-%m-%d").strftime("%B %-d, %Y")
+    except ValueError:
+        try:
+            date_text = datetime.strptime(event_date, "%Y-%m-%d").strftime("%B %#d, %Y")
+        except ValueError:
+            date_text = event_date
+
+    event_time = str(brief.get("event_time") or "").strip()
+    timezone = str(brief.get("timezone") or "").strip()
+    if event_time and timezone:
+        return f"{date_text}, {event_time} {timezone}"
+    if event_time:
+        return f"{date_text}, {event_time}"
+    return date_text
+
+
+def takeaways_text(brief: dict[str, object]) -> str:
+    brief = normalized_event_brief(brief)
+    takeaways = brief.get("takeaways")
+    if isinstance(takeaways, list) and takeaways:
+        return "\n".join(f"- {takeaway}" for takeaway in takeaways)
+    offer = str(brief.get("offer") or "").strip()
+    if offer:
+        return f"- {offer}"
+    return "- Practical ideas from the source event brief"
+
+
+def clean_sentence(value: object) -> str:
+    return str(value or "").strip().rstrip(".")
+
+
+def event_summary_markdown(brief: dict[str, object], brand_voice: str) -> str:
+    brief = normalized_event_brief(brief)
+    event_name = str(brief["event_name"])
+    return f"""
+# {event_name}
+
+## Event Details
+
+- Date and time: {event_datetime_text(brief)}
+- Location: {brief.get("location") or "Online"}
+- Audience: {brief["audience"]}
+- CTA: {brief["cta"]}
+- Registration URL: {brief["registration_url"]}
+
+## Positioning
+
+{brief.get("offer") or brief["goal"]}
+
+## Practical Takeaways
+
+{takeaways_text(brief)}
+
+## Brand Voice
+
+{brand_voice}
+""".strip()
+
+
+def event_email_sequence(brief: dict[str, object], registration_url: str) -> str:
+    brief = normalized_event_brief(brief)
+    event_name = str(brief["event_name"])
+    audience = clean_sentence(brief["audience"])
+    offer = clean_sentence(brief.get("offer") or brief["goal"])
+    cta = str(brief["cta"])
+    return f"""
+# Email Sequence: {event_name}
+
+## Email 1: Invitation
+
+Subject: A practical conversation on leading innovation that lasts
+
+Hi [first name],
+
+Innovation pressure is real, but forcing creativity often creates burnout
+instead of better ideas.
+
+This session shares a research-based framework for helping leaders build
+environments where co-creation can scale.
+
+Audience: {audience}.
+
+You will hear how leaders can use the Architect, Bridger, and Catalyst roles to
+create stronger conditions for innovation.
+
+Date and time: {event_datetime_text(brief)}
+
+[{cta}]({registration_url})
+
+## Email 2: Reminder
+
+Subject: Reminder: Genius at Scale with Emily Tedards
+
+Hi [first name],
+
+This is a reminder to register for {event_name}.
+
+The conversation will focus on practical ways to lead innovation through
+collaboration, experimentation, and learning from others. It moves beyond theory
+and uses examples from organizations including Mastercard, Pfizer, and Procter &
+Gamble.
+
+{offer}.
+
+[{cta}]({registration_url})
+
+## Email 3: Last Call
+
+Subject: Last call to register for Emily Tedards' innovation session
+
+Hi [first name],
+
+If you are working on how to make innovation more repeatable, scalable, and
+sustainable, this session is a useful next step.
+
+Join Emily Tedards for a focused conversation on co-creation and the leadership
+roles that help innovation last.
+
+[{cta}]({registration_url})
+""".strip()
+
+
+def event_social_posts(brief: dict[str, object], registration_url: str) -> str:
+    brief = normalized_event_brief(brief)
+    event_name = str(brief["event_name"])
+    return f"""
+# Social Posts: {event_name}
+
+## LinkedIn Post 1
+
+Innovation pressure can create a strange contradiction.
+
+The more an organization tries to force breakthroughs, the easier it becomes to
+exhaust the very people it depends on for original thinking.
+
+Innovation that lasts is not usually the result of pressure alone. It comes from
+the conditions leaders create: the culture, connections, and momentum that make
+co-creation possible.
+
+Emily Tedards will explore this idea in Genius at Scale, including the three
+leadership roles behind scalable innovation: the Architect, the Bridger, and the
+Catalyst.
+
+Read more: {registration_url}
+
+hashtag#Innovation hashtag#Leadership hashtag#CoCreation
+hashtag#OrganizationalDesign hashtag#HalchemyLabs
+
+## LinkedIn Post 2
+
+A lot of innovation work starts with the wrong question.
+
+It asks, "How do we get more ideas?" when the deeper question is, "What kind of
+environment allows good ideas to keep developing?"
+
+That distinction matters. Ideas rarely scale because one person has a flash of
+genius. They scale when leaders build the structures, partnerships, and energy
+that let many people contribute to the work.
+
+That is the focus of Emily Tedards' upcoming session, Genius at Scale: How to
+Lead Innovation That Lasts.
+
+Read more: {registration_url}
+
+hashtag#Innovation hashtag#LeadershipDevelopment hashtag#Strategy
+hashtag#Creativity hashtag#HalchemyLabs
+
+## LinkedIn Post 3
+
+The Architect builds the conditions.
+
+The Bridger connects across boundaries.
+
+The Catalyst helps the work spread.
+
+Together, these roles offer a more practical way to think about innovation
+leadership. Not as a demand for constant originality, but as the work of making
+co-creation easier, stronger, and more repeatable.
+
+Emily Tedards will unpack this framework in Genius at Scale, drawing on research
+and stories from global organizations including Mastercard, Pfizer, and Procter
+& Gamble.
+
+Read more: {registration_url}
+
+hashtag#Innovation hashtag#Leadership hashtag#Management
+hashtag#BusinessStrategy hashtag#HalchemyLabs
+""".strip()
+
+
+def event_landing_page_copy(brief: dict[str, object], registration_url: str) -> str:
+    brief = normalized_event_brief(brief)
+    event_name = str(brief["event_name"])
+    cta = str(brief["cta"])
+    return f"""
+# Landing Page Copy: {event_name}
+
+## Hero
+
+### Headline
+Genius at Scale: How to Lead Innovation That Lasts
+
+### Subheadline
+Join Emily Tedards for a practical conversation on how leaders can create the
+conditions for co-creation, experimentation, and scalable innovation.
+
+### Event Details
+{event_datetime_text(brief)}
+
+[{cta}]({registration_url})
+
+## Why Attend
+
+Many organizations are under pressure to innovate, but traditional approaches
+can lead to burnout, false promises, and stalled creativity. This session offers
+a research-based alternative grounded in co-creation.
+
+## What You Will Learn
+
+{takeaways_text(brief)}
+
+## Ideal For
+
+{brief["audience"]}
+
+## Final CTA
+
+Reserve your spot for the live session.
+
+[{cta}]({registration_url})
+""".strip()
+
+
 def write_event_assets(brief: dict[str, object], output_dir: Path) -> list[Path]:
     print(f"Preparing output directory: {output_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
-    event_name = str(brief.get("event_name", "Event"))
-    cta = str(brief.get("cta", "Register Now"))
     registration_url = str(brief.get("registration_url", "[url here]"))
-    local_tone = str(brief.get("tone", "Use the brand voice."))
     brand_voice = load_brand_voice()
-    source = brief_text(brief)
 
     assets = {
-        "event-brief-summary.md": (
-            f"# {event_name}\n\n"
-            "## Source Brief\n\n"
-            f"{source}\n\n"
-            "## Brand Voice\n\n"
-            f"{brand_voice}\n\n"
-            "## Local Event Tone\n\n"
-            f"{local_tone}\n"
-        ),
-        "email-sequence.md": (
-            f"# Email Sequence: {event_name}\n\n"
-            f"Local tone: {local_tone}\n\n"
-            "## Email 1\n\n"
-            f"Subject: You're invited to {event_name}\n\n"
-            f"Join us for {event_name}. {cta}: {registration_url}\n\n"
-            "## Email 2\n\n"
-            f"Subject: Reminder: {event_name}\n\n"
-            f"Save your spot for {event_name}. {cta}: {registration_url}\n"
-        ),
-        "social-posts.md": (
-            f"# Social Posts: {event_name}\n\n"
-            f"Local tone: {local_tone}\n\n"
-            f"1. Join us for {event_name}. {cta}: {registration_url}\n"
-            f"2. Planning to attend {event_name}? Details and registration: "
-            f"{registration_url}\n"
-            f"3. Last call for {event_name}. {cta}: {registration_url}\n"
-        ),
-        "landing-page-copy.md": (
-            f"# Landing Page Copy: {event_name}\n\n"
-            f"Local tone: {local_tone}\n\n"
-            f"## Hero\n\n{event_name}\n\n"
-            f"## Primary CTA\n\n[{cta}]({registration_url})\n"
-        ),
+        "event-brief-summary.md": event_summary_markdown(brief, brand_voice),
+        "email-sequence.md": event_email_sequence(brief, registration_url),
+        "social-posts.md": event_social_posts(brief, registration_url),
+        "landing-page-copy.md": event_landing_page_copy(brief, registration_url),
     }
 
     paths = []

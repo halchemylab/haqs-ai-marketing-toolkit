@@ -117,19 +117,12 @@ def write_event_run_assets(
     output_dir: Path,
     selected_assets: list[str],
 ) -> list[Path]:
-    event_name = str(brief["event_name"])
-    cta = str(brief["cta"])
-    tone = str(brief.get("tone") or "Clear and practical")
     brand_voice = load_brand_voice()
-    source = events.brief_text(brief)
     campaign_url = campaign_url_for_event(brief)
     paths = [
         write_text(
             output_dir / "event-summary.md",
-            f"# {event_name}\n\n"
-            f"## Source Brief\n\n{source}\n\n"
-            f"## Brand Voice\n\n{brand_voice}\n\n"
-            f"## Local Event Tone\n\n{tone}",
+            events.event_summary_markdown(brief, brand_voice),
         )
     ]
 
@@ -143,36 +136,21 @@ def write_event_run_assets(
         paths.append(
             write_text(
                 output_dir / "email-sequence.md",
-                f"# Email Sequence: {event_name}\n\n"
-                f"Local tone: {tone}\n\n"
-                "## Email 1\n\n"
-                f"Subject: You're invited to {event_name}\n\n"
-                f"Join us for {event_name}. {cta}: {campaign_url}\n\n"
-                "## Email 2\n\n"
-                f"Subject: Reminder: {event_name}\n\n"
-                f"Save your spot for {event_name}. {cta}: {campaign_url}",
+                events.event_email_sequence(brief, campaign_url),
             )
         )
     if ASSET_SOCIAL in selected_assets:
         paths.append(
             write_text(
                 output_dir / "social-posts.md",
-                f"# Social Posts: {event_name}\n\n"
-                f"Local tone: {tone}\n\n"
-                f"1. Join us for {event_name}. {cta}: {campaign_url}\n"
-                f"2. Planning to attend {event_name}? Details and registration: "
-                f"{campaign_url}\n"
-                f"3. Last call for {event_name}. {cta}: {campaign_url}",
+                events.event_social_posts(brief, campaign_url),
             )
         )
     if ASSET_LANDING_PAGE in selected_assets:
         paths.append(
             write_text(
                 output_dir / "landing-page-copy.md",
-                f"# Landing Page Copy: {event_name}\n\n"
-                f"Local tone: {tone}\n\n"
-                f"## Hero\n\n{event_name}\n\n"
-                f"## Primary CTA\n\n[{cta}]({campaign_url})",
+                events.event_landing_page_copy(brief, campaign_url),
             )
         )
     return paths

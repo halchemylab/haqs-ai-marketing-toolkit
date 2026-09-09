@@ -3,7 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from haqs_toolkit import events
+from haqs_toolkit import create, events
 
 
 class EventScriptTests(unittest.TestCase):
@@ -19,9 +19,14 @@ displayed image
 
 In today's hyper-competitive landscape, many organizations face a frustrating paradox.
 
+Practical Tools and Strategies You'll Gain
+
+Build a Culture of Co-creation: Design your organization as an Architect.
+
 Ideal Participants for This Conversation
 
-Current or aspiring leaders who want to stop guessing at innovation and start applying a proven, science-based model for cultivating genius at scale.
+Current or aspiring leaders who want to stop guessing at innovation and start
+applying a proven, science-based model for cultivating genius at scale.
 https://example.com/register
 """.strip()
         )
@@ -34,7 +39,91 @@ https://example.com/register
         self.assertEqual(brief["event_time"], "11:00 AM to 12:00 PM")
         self.assertEqual(brief["timezone"], "EDT")
         self.assertIn("Current or aspiring leaders", str(brief["audience"]))
+        self.assertNotIn("About the Author", str(brief["audience"]))
+        self.assertIn("Build a Culture", "\n".join(brief["takeaways"]))
         self.assertEqual(brief["registration_url"], "https://example.com/register")
+
+    def test_event_run_assets_use_source_aware_copy(self):
+        brief = events.parse_event_details(
+            """
+Genius at Scale: How to Lead Innovation That Lasts with Emily Tedards
+Thursday, September 17th, 2026 from 11:00 AM to 12:00 PM EDT
+
+Drawing on research from her new book, Emily Tedards introduces a real-world
+alternative to modern leadership challenges.
+
+Practical Tools and Strategies You'll Gain
+
+Build a Culture of Co-creation: Design your organization as an Architect.
+Bridge the Gap to New Opportunities: Work outside boundaries as a Bridger.
+Provide the Spark to Scale: Launch movements as a Catalyst.
+Ideal Participants for This Conversation
+
+Current or aspiring leaders.
+https://example.com/register
+""".strip()
+        )
+
+        with TemporaryDirectory() as directory:
+            output_dir = Path(directory) / "outputs"
+            create.write_event_run_assets(
+                brief,
+                output_dir,
+                [
+                    create.ASSET_EMAIL,
+                    create.ASSET_SOCIAL,
+                    create.ASSET_LANDING_PAGE,
+                ],
+            )
+            email = (output_dir / "email-sequence.md").read_text(encoding="utf-8")
+            social = (output_dir / "social-posts.md").read_text(encoding="utf-8")
+            landing = (output_dir / "landing-page-copy.md").read_text(
+                encoding="utf-8"
+            )
+
+        self.assertIn("Architect, Bridger, and Catalyst", email)
+        self.assertIn("Mastercard, Pfizer", email)
+        self.assertNotIn("https://example.com/register.", email)
+        self.assertIn("## LinkedIn Post 1", social)
+        self.assertIn("Read more:", social)
+        self.assertIn("hashtag#Innovation", social)
+        self.assertNotIn("1. Many leaders", social)
+        self.assertIn("Build a Culture of Co-creation", landing)
+
+    def test_event_renderers_normalize_bloated_existing_brief(self):
+        source_material = """
+Genius at Scale: How to Lead Innovation That Lasts with Emily Tedards
+Thursday, September 17th, 2026 from 11:00 AM to 12:00 PM EDT
+
+In today's hyper-competitive landscape, many organizations face a frustrating
+paradox.
+
+Practical Tools and Strategies You'll Gain
+
+Build a Culture of Co-creation: Design your organization as an Architect.
+Ideal Participants for This Conversation
+
+Current or aspiring leaders.
+Join Emily Tedards to discover how to drive innovation.
+
+About the Author
+
+Emily Tedards is a graduate researcher in organizational behavior.
+""".strip()
+        brief = {
+            **events.parse_event_details(source_material),
+            "audience": "Current or aspiring leaders. About the Author Emily bio.",
+            "registration_url": "https://example.com/register",
+        }
+
+        landing = events.event_landing_page_copy(
+            brief,
+            "https://example.com/register",
+        )
+
+        self.assertIn("Current or aspiring leaders.", landing)
+        self.assertNotIn("About the Author", landing)
+        self.assertIn("Build a Culture of Co-creation", landing)
 
     def test_main_without_event_dir_creates_complete_run_from_paste(self):
         pasted_event = """
