@@ -298,8 +298,48 @@ def brief_from_pasted_details() -> dict[str, object]:
     brief = parse_event_details(read_pasted_event_details())
     if not brief["registration_url"]:
         brief["registration_url"] = read_url("Registration URL: ")
-    validate_event_brief(brief)
     return brief
+
+
+def review_event_brief(brief: dict[str, object]) -> bool:
+    fields = [*RECOMMENDED_FIELDS, "takeaways"]
+    while True:
+        print("\nEvent preview")
+        for index, field in enumerate(fields, start=1):
+            value = brief.get(field, "")
+            if isinstance(value, list):
+                value = " | ".join(str(item) for item in value)
+            print(f"{index}. {field.replace('_', ' ').title()}: {value or '[missing]'}")
+        try:
+            validate_event_brief(brief)
+            valid = True
+        except EventBriefError as exc:
+            print(f"\nPlease fix:\n{exc}")
+            valid = False
+        choice = input(
+            "\nField number to edit, Enter to continue, or Q to cancel: "
+        ).strip()
+        if choice.lower() == "q":
+            return False
+        if not choice:
+            if valid:
+                return True
+            continue
+        if not choice.isdigit() or not 1 <= int(choice) <= len(fields):
+            print("Please choose a listed field number.")
+            continue
+        field = fields[int(choice) - 1]
+        hint = " (separate items with |)" if field in {"channels", "takeaways"} else ""
+        value = input(f"New {field.replace('_', ' ')}{hint}: ").strip()
+        brief[field] = (
+            [item.strip() for item in value.split("|") if item.strip()]
+            if field in {"channels", "takeaways"}
+            else value
+        )
+        edited_fields = list(brief.get("edited_fields", []))
+        if field not in edited_fields:
+            edited_fields.append(field)
+        brief["edited_fields"] = edited_fields
 
 
 def choose_event_run_options() -> tuple[str, list[str]]:
@@ -339,6 +379,8 @@ def normalized_event_brief(brief: dict[str, object]) -> dict[str, object]:
 
     normalized = brief.copy()
     for key in ["audience", "offer", "takeaways"]:
+        if key in brief.get("edited_fields", []):
+            continue
         value = parsed.get(key)
         if value:
             normalized[key] = value
@@ -716,11 +758,16 @@ def main(argv: list[str] | None = None) -> int:
 
         from haqs_toolkit import create
 
-        brief = brief_from_pasted_details()
         try:
-            validate_event_brief(brief)
+            brief = brief_from_pasted_details()
+            if not review_event_brief(brief):
+                print("Generation cancelled.")
+                return 0
         except EventBriefError as exc:
             print(f"Error: {exc}")
+            return 1
+        except EOFError:
+            print("Error: Input ended before the event preview was confirmed.")
             return 1
 
         scope, selected_assets = choose_event_run_options()

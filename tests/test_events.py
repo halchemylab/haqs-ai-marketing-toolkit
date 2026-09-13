@@ -176,6 +176,7 @@ https://example.com/spring-workshop
             [
                 *pasted_event.splitlines(),
                 "END",
+                "",
                 "1",
             ]
         )
@@ -205,6 +206,7 @@ https://example.com/spring-workshop
             [
                 *pasted_event.splitlines(),
                 "END",
+                "",
                 "2",
                 "1,3",
             ]
@@ -219,6 +221,39 @@ https://example.com/spring-workshop
         call = run_creation.call_args.kwargs
         self.assertEqual(call["scope"], "selected")
         self.assertEqual(call["selected_assets"], ["tracked_url", "email"])
+
+    def test_preview_repairs_missing_date_and_preserves_copy_edits(self):
+        brief = events.parse_event_details(
+            "Wrong title\n\nOriginal offer\nhttps://example.com/register"
+        )
+        answers = [
+            "", "2", "invalid", "", "2", "2026-09-17",
+            "1", "Correct title", "6", "Team leaders",
+            "8", "Revised offer", "13", "First takeaway | Second takeaway", "",
+        ]
+        with patch("builtins.input", side_effect=answers):
+            self.assertTrue(events.review_event_brief(brief))
+
+        normalized = events.normalized_event_brief(brief)
+        self.assertEqual(normalized["event_date"], "2026-09-17")
+        self.assertEqual(normalized["event_name"], "Correct title")
+        self.assertEqual(normalized["audience"], "Team leaders")
+        self.assertEqual(normalized["offer"], "Revised offer")
+        self.assertEqual(normalized["takeaways"], ["First takeaway", "Second takeaway"])
+
+    def test_preview_cancel_does_not_generate(self):
+        answers = ["Workshop", "https://example.com/register", "END", "q"]
+        with patch("builtins.input", side_effect=answers):
+            with patch("haqs_toolkit.create.run_creation") as run_creation:
+                self.assertEqual(events.main([]), 0)
+        run_creation.assert_not_called()
+
+    def test_preview_eof_does_not_generate(self):
+        answers = ["Workshop", "https://example.com/register", "END", EOFError]
+        with patch("builtins.input", side_effect=answers):
+            with patch("haqs_toolkit.create.run_creation") as run_creation:
+                self.assertEqual(events.main([]), 1)
+        run_creation.assert_not_called()
 
     def test_out_without_event_dir_is_still_invalid(self):
         with TemporaryDirectory() as directory:
