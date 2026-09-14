@@ -43,6 +43,9 @@ runs/<job-slug>-<job-type>-<scope>-YYYY-MM-DD-HHMM/
 
 Quality checks run automatically after assets are generated.
 
+After generation, `haqs-create` automatically opens the exact run's `outputs/`
+folder so the files are easy to find. This also applies when run through Codex.
+
 ## Selected Assets
 
 For selected asset work, choose one or more assets from the same brief.

@@ -85,7 +85,8 @@ class CreateFlowTests(unittest.TestCase):
             )
             self.assertIn("example.com", quality_report)
 
-    def test_main_can_create_selected_event_from_existing_brief(self):
+    @patch("haqs_toolkit.create.open_output_folder")
+    def test_main_can_create_selected_event_from_existing_brief(self, opener):
         with TemporaryDirectory() as directory:
             brief_path = Path(directory) / "brief.json"
             brief_path.write_text(
@@ -117,6 +118,12 @@ class CreateFlowTests(unittest.TestCase):
                     str(Path(directory) / "runs"),
                 ]
             )
+
+            opener.assert_called_once()
+            opened_folder = opener.call_args.args[0]
+            self.assertEqual(opened_folder.name, "outputs")
+            self.assertEqual(opened_folder.parent.parent, Path(directory) / "runs")
+            self.assertTrue((opened_folder / "campaign-url.txt").exists())
 
         self.assertEqual(exit_code, 0)
 

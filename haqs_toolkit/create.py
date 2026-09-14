@@ -12,7 +12,12 @@ from haqs_toolkit.generators import (
     landing_page_copy_generator,
     qr_code_generator,
 )
-from haqs_toolkit.runs import create_run_dir, write_packet_index, write_quality_check
+from haqs_toolkit.runs import (
+    create_run_dir,
+    open_output_folder,
+    write_packet_index,
+    write_quality_check,
+)
 from haqs_toolkit.utils.marketing import (
     choose_option,
     load_brand_voice,
@@ -396,13 +401,14 @@ def main(argv: list[str] | None = None) -> int:
     if scope == SCOPE_SELECTED and not args.assets:
         selected_assets = choose_assets(job_type)
 
-    run_creation(
+    run_dir = run_creation(
         brief=brief,
         job_type=job_type,
         scope=scope,
         selected_assets=selected_assets,
         runs_dir=args.runs_dir,
     )
+    open_output_folder(run_dir / "outputs")
     return 0
 
 

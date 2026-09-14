@@ -2,13 +2,30 @@
 
 from __future__ import annotations
 
+import os
 import re
+import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 
 from haqs_toolkit import packet_quality
 
 RUNS_DIR = Path("runs")
+
+
+def open_output_folder(output_dir: Path) -> None:
+    """Open the generated folder in the system file manager."""
+    output_dir = output_dir.resolve()
+    try:
+        if sys.platform == "win32":
+            os.startfile(str(output_dir))
+        else:
+            command = "open" if sys.platform == "darwin" else "xdg-open"
+            subprocess.run([command, str(output_dir)], check=True)
+    except (OSError, subprocess.SubprocessError) as exc:
+        print(f"Could not open output folder: {exc}")
+        print(f"Your generated files are at: {output_dir}")
 
 
 def slugify(value: str) -> str:
@@ -25,9 +42,7 @@ def create_run_dir(
     now: datetime | None = None,
 ) -> Path:
     timestamp = (now or datetime.now()).strftime("%Y-%m-%d-%H%M")
-    base_name = (
-        f"{slugify(job_name)}-{slugify(job_type)}-{slugify(scope)}-{timestamp}"
-    )
+    base_name = f"{slugify(job_name)}-{slugify(job_type)}-{slugify(scope)}-{timestamp}"
     run_dir = runs_dir / base_name
     suffix = 2
     while run_dir.exists():

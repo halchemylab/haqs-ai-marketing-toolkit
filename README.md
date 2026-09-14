@@ -62,6 +62,9 @@ runs/<job-slug>-<job-type>-<scope>-YYYY-MM-DD-HHMM/
   quality-check.md
 ```
 
+After generation, `haqs-create` automatically opens that run's `outputs/` folder
+so the generated files are easy to find.
+
 Examples:
 
 ```text
