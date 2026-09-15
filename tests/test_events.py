@@ -75,9 +75,9 @@ https://example.com/register
                     create.ASSET_LANDING_PAGE,
                 ],
             )
-            email = (output_dir / "email-sequence.md").read_text(encoding="utf-8")
-            social = (output_dir / "social-posts.md").read_text(encoding="utf-8")
-            landing = (output_dir / "landing-page-copy.md").read_text(
+            email = (output_dir / "email-sequence.txt").read_text(encoding="utf-8")
+            social = (output_dir / "social-posts.txt").read_text(encoding="utf-8")
+            landing = (output_dir / "landing-page-copy.txt").read_text(
                 encoding="utf-8"
             )
 

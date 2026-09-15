@@ -48,7 +48,7 @@ class CampaignTests(unittest.TestCase):
             brief_path = campaigns.create_campaign_packet(campaign_dir)
 
             self.assertTrue(brief_path.exists())
-            self.assertTrue((campaign_dir / "inputs" / "source-notes.md").exists())
+            self.assertTrue((campaign_dir / "inputs" / "source-notes.txt").exists())
             self.assertTrue((campaign_dir / "outputs").is_dir())
 
     def test_generate_campaign_packet_writes_expected_files(self):
@@ -72,9 +72,10 @@ class CampaignTests(unittest.TestCase):
 
             names = {path.name for path in paths}
             self.assertIn("campaign-url.txt", names)
-            self.assertIn("email-drafts.md", names)
-            self.assertIn("social-posts.md", names)
-            self.assertIn("landing-page-copy.md", names)
+            self.assertIn("campaign-brief-summary.txt", names)
+            self.assertIn("email-drafts.txt", names)
+            self.assertIn("social-posts.txt", names)
+            self.assertIn("landing-page-copy.txt", names)
             self.assertIn("qr-code.png", names)
             self.assertIn("project-plan.csv", names)
             self.assertIn("packet-index.md", names)
@@ -88,14 +89,14 @@ class CampaignTests(unittest.TestCase):
             tracked_urls = (campaign_dir / "outputs" / "campaign-url.txt").read_text(
                 encoding="utf-8"
             )
-            email = (campaign_dir / "outputs" / "email-drafts.md").read_text(
+            email = (campaign_dir / "outputs" / "email-drafts.txt").read_text(
                 encoding="utf-8"
             )
-            social = (campaign_dir / "outputs" / "social-posts.md").read_text(
+            social = (campaign_dir / "outputs" / "social-posts.txt").read_text(
                 encoding="utf-8"
             )
             landing = (
-                campaign_dir / "outputs" / "landing-page-copy.md"
+                campaign_dir / "outputs" / "landing-page-copy.txt"
             ).read_text(encoding="utf-8")
             self.assertIn("utm_source=email", tracked_urls)
             self.assertIn("utm_source=linkedin", tracked_urls)
@@ -108,6 +109,21 @@ class CampaignTests(unittest.TestCase):
             qr_url = create_qr_code.call_args.args[0]
             self.assertIn("utm_source=qr_code", qr_url)
             self.assertNotIn("utm_source=email", qr_url)
+
+    def test_source_notes_reads_legacy_markdown_file(self):
+        with TemporaryDirectory() as directory:
+            campaign_dir = Path(directory)
+            inputs_dir = campaign_dir / "inputs"
+            inputs_dir.mkdir()
+            (inputs_dir / "source-notes.md").write_text(
+                "Legacy campaign notes\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                campaigns.source_notes(campaign_dir),
+                "Legacy campaign notes",
+            )
 
     def test_main_list_fields(self):
         self.assertEqual(campaigns.main(["--list-fields"]), 0)

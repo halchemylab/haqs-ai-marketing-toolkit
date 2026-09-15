@@ -81,6 +81,10 @@ Complete campaign packets generate campaign summary, tracked campaign URL, QR
 code, email drafts, social posts, landing page copy, project plan when a launch
 date is available, packet index, and quality check.
 
+User-facing copy, summaries, and source notes are saved as `.txt` files so they
+open in a regular text editor. Packet indexes and quality reports remain `.md`
+files because they use Markdown navigation and report formatting.
+
 Selected asset runs use the same brief but generate only the chosen outputs,
 such as tracked URL plus QR code, or email sequence plus social posts.
 

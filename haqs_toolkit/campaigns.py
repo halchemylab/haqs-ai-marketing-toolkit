@@ -151,10 +151,12 @@ def brief_text(brief: dict[str, object]) -> str:
 
 
 def source_notes(campaign_dir: Path) -> str:
-    path = campaign_dir / "inputs" / "source-notes.md"
-    if not path.exists():
-        return ""
-    return path.read_text(encoding="utf-8").strip()
+    inputs_dir = campaign_dir / "inputs"
+    for filename in ("source-notes.txt", "source-notes.md"):
+        path = inputs_dir / filename
+        if path.exists():
+            return path.read_text(encoding="utf-8").strip()
+    return ""
 
 
 def campaign_source_material(brief: dict[str, object], notes: str) -> str:
@@ -424,7 +426,7 @@ def write_campaign_assets(
 
     paths.append(
         write_text(
-            output_dir / "campaign-brief-summary.md",
+            output_dir / "campaign-brief-summary.txt",
             f"# {brief['campaign_name']}\n\n"
             f"## Source Brief\n\n{brief_text(brief)}\n\n"
             f"## Brand Voice\n\n{brand_voice}\n\n"
@@ -447,7 +449,7 @@ def write_campaign_assets(
         ),
         fallback=fallback_email_copy(brief, tracking_urls["email"]),
     ).replace("[url here]", tracking_urls["email"])
-    paths.append(write_text(output_dir / "email-drafts.md", email_copy))
+    paths.append(write_text(output_dir / "email-drafts.txt", email_copy))
 
     social_copy = ai_or_fallback(
         system_prompt=(
@@ -456,7 +458,7 @@ def write_campaign_assets(
         user_prompt=social_prompt(source_material, brand_voice, tracking_urls),
         fallback=fallback_social_copy(brief, tracking_urls["linkedin"]),
     )
-    paths.append(write_text(output_dir / "social-posts.md", social_copy))
+    paths.append(write_text(output_dir / "social-posts.txt", social_copy))
 
     landing_copy = ai_or_fallback(
         system_prompt="You are a precise conversion copywriter for landing pages.",
@@ -480,7 +482,7 @@ def write_campaign_assets(
         ),
         fallback=fallback_landing_copy(brief, tracking_urls["landing_page"]),
     ).replace("[url here]", tracking_urls["landing_page"])
-    paths.append(write_text(output_dir / "landing-page-copy.md", landing_copy))
+    paths.append(write_text(output_dir / "landing-page-copy.txt", landing_copy))
 
     if "qr_code" in channels or "qr" in channels:
         qr_path = output_dir / "qr-code.png"
@@ -541,7 +543,7 @@ def create_campaign_packet(campaign_dir: Path) -> Path:
         json.dumps(starter_brief(campaign_name), indent=2) + "\n",
         encoding="utf-8",
     )
-    (campaign_dir / "inputs" / "source-notes.md").write_text(
+    (campaign_dir / "inputs" / "source-notes.txt").write_text(
         (
             "# Source Notes\n\n"
             "Add campaign details, customer language, or offer notes here.\n"

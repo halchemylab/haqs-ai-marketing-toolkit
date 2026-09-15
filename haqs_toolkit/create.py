@@ -111,7 +111,7 @@ def write_event_run_assets(
     tracking_urls = events.event_tracking_urls(brief)
     paths = [
         write_text(
-            output_dir / "event-summary.md",
+            output_dir / "event-summary.txt",
             events.event_summary_markdown(brief, brand_voice),
         )
     ]
@@ -130,21 +130,21 @@ def write_event_run_assets(
     if ASSET_EMAIL in selected_assets:
         paths.append(
             write_text(
-                output_dir / "email-sequence.md",
+                output_dir / "email-sequence.txt",
                 events.event_email_sequence(brief, tracking_urls["email"]),
             )
         )
     if ASSET_SOCIAL in selected_assets:
         paths.append(
             write_text(
-                output_dir / "social-posts.md",
+                output_dir / "social-posts.txt",
                 events.event_social_posts(brief, tracking_urls),
             )
         )
     if ASSET_LANDING_PAGE in selected_assets:
         paths.append(
             write_text(
-                output_dir / "landing-page-copy.md",
+                output_dir / "landing-page-copy.txt",
                 events.event_landing_page_copy(brief, tracking_urls["landing_page"]),
             )
         )
@@ -161,7 +161,7 @@ def write_campaign_run_assets(
     tracking_urls = campaigns.campaign_tracking_urls(brief)
     paths = [
         write_text(
-            output_dir / "campaign-summary.md",
+            output_dir / "campaign-summary.txt",
             f"# {brief['campaign_name']}\n\n"
             f"## Source Brief\n\n{campaigns.brief_text(brief)}\n\n"
             f"## Brand Voice\n\n{brand_voice}",
@@ -189,7 +189,7 @@ def write_campaign_run_assets(
             ),
             fallback=campaigns.fallback_email_copy(brief, tracking_urls["email"]),
         ).replace("[url here]", tracking_urls["email"])
-        paths.append(write_text(output_dir / "email-drafts.md", email_copy))
+        paths.append(write_text(output_dir / "email-drafts.txt", email_copy))
     if ASSET_SOCIAL in selected_assets:
         social_copy = campaigns.ai_or_fallback(
             system_prompt=(
@@ -203,7 +203,7 @@ def write_campaign_run_assets(
             ),
             fallback=campaigns.fallback_social_copy(brief, tracking_urls["linkedin"]),
         )
-        paths.append(write_text(output_dir / "social-posts.md", social_copy))
+        paths.append(write_text(output_dir / "social-posts.txt", social_copy))
     if ASSET_LANDING_PAGE in selected_assets:
         landing_copy = campaigns.ai_or_fallback(
             system_prompt="You are a precise conversion copywriter for landing pages.",
@@ -230,7 +230,7 @@ def write_campaign_run_assets(
                 tracking_urls["landing_page"],
             ),
         ).replace("[url here]", tracking_urls["landing_page"])
-        paths.append(write_text(output_dir / "landing-page-copy.md", landing_copy))
+        paths.append(write_text(output_dir / "landing-page-copy.txt", landing_copy))
     if ASSET_PROJECT_PLAN in selected_assets:
         project_plan_path = campaigns.write_project_plan(brief, output_dir)
         if project_plan_path:

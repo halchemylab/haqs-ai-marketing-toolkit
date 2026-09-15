@@ -693,11 +693,11 @@ def write_event_assets(brief: dict[str, object], output_dir: Path) -> list[Path]
     tracking_urls = event_tracking_urls(brief)
 
     assets = {
-        "event-brief-summary.md": event_summary_markdown(brief, brand_voice),
+        "event-brief-summary.txt": event_summary_markdown(brief, brand_voice),
         "campaign-url.txt": event_tracking_urls_text(tracking_urls),
-        "email-sequence.md": event_email_sequence(brief, tracking_urls["email"]),
-        "social-posts.md": event_social_posts(brief, tracking_urls),
-        "landing-page-copy.md": event_landing_page_copy(
+        "email-sequence.txt": event_email_sequence(brief, tracking_urls["email"]),
+        "social-posts.txt": event_social_posts(brief, tracking_urls),
+        "landing-page-copy.txt": event_landing_page_copy(
             brief,
             tracking_urls["landing_page"],
         ),

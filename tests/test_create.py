@@ -61,15 +61,16 @@ class CreateFlowTests(unittest.TestCase):
             self.assertTrue((run_dir / "brief.json").exists())
             self.assertTrue((run_dir / "outputs" / "campaign-url.txt").exists())
             self.assertTrue((run_dir / "outputs" / "qr-code.png").exists())
-            self.assertTrue((run_dir / "outputs" / "social-posts.md").exists())
-            self.assertFalse((run_dir / "outputs" / "email-sequence.md").exists())
+            self.assertTrue((run_dir / "outputs" / "event-summary.txt").exists())
+            self.assertTrue((run_dir / "outputs" / "social-posts.txt").exists())
+            self.assertFalse((run_dir / "outputs" / "email-sequence.txt").exists())
             self.assertTrue((run_dir / "quality-check.md").exists())
             self.assertTrue((run_dir / "packet-index.md").exists())
 
             tracked_urls = (run_dir / "outputs" / "campaign-url.txt").read_text(
                 encoding="utf-8"
             )
-            social = (run_dir / "outputs" / "social-posts.md").read_text(
+            social = (run_dir / "outputs" / "social-posts.txt").read_text(
                 encoding="utf-8"
             )
             self.assertIn("utm_source=qr_code", tracked_urls)

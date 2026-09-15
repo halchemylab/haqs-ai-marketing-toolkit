@@ -96,8 +96,8 @@ def choose_or_custom(prompt: str, options: list[str], custom_label: str) -> str:
     return selected
 
 
-def save_markdown(prefix: str, content: str) -> Path:
-    path = timestamped_output_path(prefix, "md")
+def save_text(prefix: str, content: str) -> Path:
+    path = timestamped_output_path(prefix, "txt")
     path.write_text(content.strip() + "\n", encoding="utf-8")
     return path
 
@@ -267,7 +267,7 @@ def main() -> None:
         print(f"Error: {exc}")
         return
 
-    path = save_markdown("landing_page_copy", landing_page_copy)
+    path = save_text("landing_page_copy", landing_page_copy)
     minutes_saved = 90
     roi = log_roi_event(
         script="landing_page_copy_generator",
@@ -281,7 +281,7 @@ def main() -> None:
     print(f"\nSaved to: {path}")
     print_roi_logged(roi)
     print(
-        "\nNext step: Review the Markdown, choose the strongest headline and "
+        "\nNext step: Review the copy, choose the strongest headline and "
         "CTA options, then paste the approved sections into your page builder."
     )
 
