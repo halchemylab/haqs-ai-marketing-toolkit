@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import argparse
 
-import qrcode
-
+from haqs_toolkit.errors import command_errors, record_saved
 from haqs_toolkit.utils.marketing import (
     log_roi_event,
     print_roi_logged,
@@ -17,6 +16,8 @@ from haqs_toolkit.utils.marketing import (
 
 
 def create_qr_code(link: str):
+    import qrcode
+
     link = validate_url(link)
     qr = qrcode.QRCode(
         version=None,
@@ -33,7 +34,7 @@ def save_qr_code(link: str):
     image = create_qr_code(link)
     path = timestamped_output_path("qr_code", "png")
     image.save(path)
-    return path
+    return record_saved(path)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -42,6 +43,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+@command_errors
 def main(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
     welcome("QR code generation")
@@ -67,4 +69,4 @@ def main(argv: list[str] | None = None) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import TypedDict
 from urllib.parse import urlparse
 
+from haqs_toolkit.errors import UserError, record_saved
+
 DEFAULT_OUTPUT_DIR = "output"
 OUTPUT_DIR = Path(os.getenv("HAQS_OUTPUT_DIR", DEFAULT_OUTPUT_DIR))
 ROI_LOG_PATH = OUTPUT_DIR / "roi" / "automation_roi.csv"
@@ -72,7 +74,7 @@ class RoiResult(TypedDict):
     path: Path
 
 
-class AiGenerationError(RuntimeError):
+class AiGenerationError(UserError, RuntimeError):
     """Raised when an AI generation request cannot be completed."""
 
 
@@ -112,11 +114,20 @@ def read_optional(prompt: str) -> str:
 
 def validate_url(url: str) -> str:
     value = url.strip()
-    parsed = urlparse(value)
+    try:
+        parsed = urlparse(value)
+    except ValueError as exc:
+        raise UserError(
+            "Invalid URL.",
+            "Check the address and use a full URL such as https://example.com.",
+        ) from exc
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
-        raise ValueError("Enter a full URL that starts with http:// or https://.")
+        raise UserError(
+            "Invalid URL.",
+            "Enter a full URL that starts with http:// or https://, for example https://example.com.",
+        )
     if any(char.isspace() for char in value):
-        raise ValueError("Enter a URL without spaces.")
+        raise UserError("Invalid URL.", "Enter a URL without spaces.")
     return value
 
 
@@ -181,7 +192,7 @@ def timestamped_output_path(
 def save_text(prefix: str, content: str) -> Path:
     path = timestamped_output_path(prefix)
     path.write_text(content.strip() + "\n", encoding="utf-8")
-    return path
+    return record_saved(path)
 
 
 def load_brand_voice(path: Path | None = None) -> str:
@@ -296,10 +307,14 @@ def combine_roi_results(results: list[RoiResult]) -> RoiResult:
 
 
 def get_openai_client():
-    if not os.getenv("OPENAI_API_KEY"):
+    from dotenv import load_dotenv
+
+    load_dotenv(REPO_ROOT / ".env", override=False)
+    if not os.getenv("OPENAI_API_KEY", "").strip():
         raise AiGenerationError(
-            "OPENAI_API_KEY is not set. Set it in your terminal before running "
-            "this script."
+            "OPENAI_API_KEY is missing.",
+            'In PowerShell, run $env:OPENAI_API_KEY="your-api-key-here", '
+            f"or set OPENAI_API_KEY in {REPO_ROOT / '.env'}. Then run the tool again.",
         )
     from openai import OpenAI
 
@@ -330,12 +345,73 @@ def generate_text(
     except AiGenerationError:
         raise
     except Exception as exc:
-        raise AiGenerationError(
-            "AI generation failed. Check your model setting, network connection, "
-            "API key, and OpenAI account status."
-        ) from exc
+        error = ai_request_error(exc)
+        if error is None:
+            raise
+        raise error from exc
 
     output_text = response.output_text.strip()
     if not output_text:
-        raise AiGenerationError("AI generation returned an empty response.")
+        raise AiGenerationError(
+            "AI generation returned an empty response.",
+            "Run the tool again. If this persists, check OPENAI_MODEL.",
+        )
     return output_text
+
+
+def ai_request_error(exc: Exception) -> AiGenerationError | None:
+    """Translate known SDK failures without exposing raw provider responses."""
+    if isinstance(exc, ModuleNotFoundError):
+        return AiGenerationError(
+            f"A required Python dependency is missing: {exc.name}.",
+            "From the toolkit folder, run python -m pip install -e . and retry.",
+        )
+    import openai
+
+    if isinstance(exc, openai.AuthenticationError):
+        return AiGenerationError(
+            "The API key was rejected.",
+            "Replace OPENAI_API_KEY with a valid key and retry.",
+        )
+    if isinstance(exc, openai.RateLimitError):
+        if exc.code == "insufficient_quota":
+            return AiGenerationError(
+                "The API account has insufficient quota.",
+                "Check the API project's credits and spending limits, then retry.",
+            )
+        return AiGenerationError(
+            "The API request limit was reached.",
+            "Wait a moment and retry. If this persists, check your API usage limits.",
+        )
+    if isinstance(exc, openai.APITimeoutError):
+        return AiGenerationError(
+            "The AI request timed out.", "Check your connection and retry in a moment."
+        )
+    if isinstance(exc, openai.APIConnectionError):
+        return AiGenerationError(
+            "Could not connect to the AI service.",
+            "Check your internet connection, VPN or proxy settings, then retry.",
+        )
+    if isinstance(exc, openai.NotFoundError):
+        return AiGenerationError(
+            "The requested AI resource was not found.",
+            "Check OPENAI_MODEL and confirm your API project has access to that model.",
+        )
+    if isinstance(exc, openai.PermissionDeniedError):
+        return AiGenerationError(
+            "The API project does not have permission for this request.",
+            "Check the API key's project permissions and access to OPENAI_MODEL.",
+        )
+    if isinstance(exc, openai.BadRequestError):
+        return AiGenerationError(
+            "The AI service could not accept this request.",
+            "Check that OPENAI_MODEL supports the requested output format; "
+            "try less source text. Use HAQS_DEBUG=1 for technical details.",
+        )
+    if isinstance(exc, openai.APIStatusError):
+        return AiGenerationError(
+            "The AI service could not complete the request.",
+            "Retry in a moment. If it persists, use HAQS_DEBUG=1 "
+            "for technical details.",
+        )
+    return None

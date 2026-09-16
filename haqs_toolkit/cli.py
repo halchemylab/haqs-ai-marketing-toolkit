@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from haqs_toolkit import create
+from haqs_toolkit.errors import command_errors
 from haqs_toolkit.generators import (
     campaign_url_builder,
     content_repurposer,
@@ -22,7 +23,7 @@ from haqs_toolkit.generators import (
 class ToolOption:
     name: str
     description: str
-    run: Callable[[], None]
+    run: Callable[[], int | None]
 
 
 TOOL_OPTIONS = [
@@ -96,15 +97,16 @@ def choose_tool() -> ToolOption | None:
         print("Please choose a valid option number.")
 
 
-def main() -> None:
+@command_errors
+def main() -> int | None:
     selected_tool = choose_tool()
     if selected_tool is None:
         print("Goodbye.")
         return
 
     print()
-    selected_tool.run()
+    return selected_tool.run()
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

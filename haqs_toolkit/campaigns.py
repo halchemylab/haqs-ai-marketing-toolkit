@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import sys
 from datetime import date
 from pathlib import Path
 from urllib.parse import urlparse
 
+from haqs_toolkit.errors import UserError, command_errors, record_saved, report_error
 from haqs_toolkit.generators import (
     campaign_url_builder,
     content_repurposer,
@@ -68,7 +71,7 @@ CAMPAIGN_TYPE_TO_PLAN_TYPE = {
 }
 
 
-class CampaignBriefError(ValueError):
+class CampaignBriefError(UserError):
     """Raised when a campaign brief cannot be loaded or validated."""
 
 
@@ -79,17 +82,34 @@ def ensure_campaign_packet_dirs(campaign_dir: Path) -> None:
 
 def load_campaign_brief(path: Path) -> dict[str, object]:
     if not path.exists():
-        raise CampaignBriefError(f"Missing required file: {path}")
+        raise CampaignBriefError(
+            f"Missing required file: {path}",
+            "Check the supplied path and add a brief.json "
+            "containing the required fields. "
+            "Use --list-fields to see the fields.",
+        )
 
     try:
         brief = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        raise CampaignBriefError(f"Invalid JSON in {path}: {exc.msg}") from exc
+        raise CampaignBriefError(
+            f"Invalid JSON at line {exc.lineno}, column {exc.colno}: {exc.msg}",
+            "Open this file and correct the JSON syntax at that location. "
+            "Use double quotes for keys and text, and remove trailing commas.",
+            path,
+        ) from exc
 
     if not isinstance(brief, dict):
         raise CampaignBriefError("brief.json must contain a JSON object.")
 
-    validate_campaign_brief(brief)
+    try:
+        validate_campaign_brief(brief)
+    except CampaignBriefError as exc:
+        raise CampaignBriefError(
+            exc.message,
+            "Edit the listed fields, save the file, then run the same command again.",
+            path,
+        ) from exc
     return brief
 
 
@@ -98,7 +118,9 @@ def validate_campaign_brief(brief: dict[str, object]) -> None:
     for field in REQUIRED_FIELDS:
         value = brief.get(field)
         if value is None or str(value).strip() == "":
-            errors.append(f"Missing required field: {field}")
+            errors.append(
+                f'Missing required field: {field}. Add a non-empty "{field}" value.'
+            )
 
     landing_page_url = str(brief.get("landing_page_url", "")).strip()
     if landing_page_url:
@@ -113,7 +135,9 @@ def validate_campaign_brief(brief: dict[str, object]) -> None:
         try:
             project_plan_builder.parse_date(launch_date)
         except ValueError:
-            errors.append("Invalid launch_date: use YYYY-MM-DD.")
+            errors.append(
+                "Invalid launch_date: use YYYY-MM-DD, for example 2026-09-30."
+            )
 
     channels = brief.get("channels")
     if channels is not None and (
@@ -169,14 +193,21 @@ def campaign_source_material(brief: dict[str, object], notes: str) -> str:
 def write_text(path: Path, content: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content.strip() + "\n", encoding="utf-8")
-    return path
+    return record_saved(path)
 
 
 def ai_or_fallback(system_prompt: str, user_prompt: str, fallback: str) -> str:
     try:
         return generate_text(system_prompt=system_prompt, user_prompt=user_prompt)
     except AiGenerationError as exc:
-        return f"{fallback}\n\nGeneration note: {exc}"
+        if os.getenv("HAQS_DEBUG") == "1":
+            raise
+        print(
+            "Warning: AI generation was unavailable; template content was used.\n"
+            f"{exc}",
+            file=sys.stderr,
+        )
+        return fallback
 
 
 def build_campaign_url(brief: dict[str, object]) -> str:
@@ -203,9 +234,9 @@ def build_campaign_tracking_url(
     medium: str,
     content: str = "",
 ) -> str:
-    campaign_name = (
-        str(brief.get("utm_campaign") or campaign_tracking_name(brief)).strip()
-    )
+    campaign_name = str(
+        brief.get("utm_campaign") or campaign_tracking_name(brief)
+    ).strip()
     return campaign_url_builder.add_utm_parameters(
         landing_page_url=str(brief["landing_page_url"]).strip(),
         source=source,
@@ -374,7 +405,7 @@ def write_project_plan(brief: dict[str, object], output_dir: Path) -> Path | Non
         rows,
         project_plan_builder.PROJECT_PLAN_FIELDNAMES,
     )
-    return path
+    return record_saved(path)
 
 
 def write_packet_index(
@@ -474,8 +505,7 @@ def write_campaign_assets(
             primary_cta=str(brief["cta"]),
             credibility="",
             must_include=(
-                "Use this landing page tracking URL: "
-                f"{tracking_urls['landing_page']}"
+                f"Use this landing page tracking URL: {tracking_urls['landing_page']}"
             ),
             avoid="",
             brand_voice=brand_voice,
@@ -487,7 +517,7 @@ def write_campaign_assets(
     if "qr_code" in channels or "qr" in channels:
         qr_path = output_dir / "qr-code.png"
         qr_code_generator.create_qr_code(tracking_urls["qr_code"]).save(qr_path)
-        paths.append(qr_path)
+        paths.append(record_saved(qr_path))
 
     project_plan_path = write_project_plan(brief, output_dir)
     if project_plan_path:
@@ -582,6 +612,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+@command_errors
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -603,7 +634,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Using campaign packet: {args.campaign_dir}")
         paths = generate_campaign_packet(args.campaign_dir, args.out)
     except CampaignBriefError as exc:
-        print(f"Error: {exc}")
+        report_error(exc)
         return 1
 
     print(f"Generated {len(paths)} campaign files:")

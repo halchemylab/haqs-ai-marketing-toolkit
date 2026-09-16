@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from haqs_toolkit.errors import UserError, command_errors
 from haqs_toolkit.utils.marketing import (
-    AiGenerationError,
     brand_voice_prompt_block,
     generate_text,
     load_brand_voice,
@@ -45,25 +45,24 @@ Source content:
 """.strip()
 
 
-def main() -> None:
+@command_errors
+def main() -> int | None:
     welcome("email generation")
     source_content = read_multiline("Enter or Paste the Content Here:")
     if not source_content:
-        print("No content entered. Exiting.")
-        return
+        raise UserError(
+            "No source content was entered.",
+            "Run the tool again, paste your content, then enter a blank line.",
+        )
 
     purpose = read_required("What is the purpose of the email? ")
     print("\nGenerating emails...\n")
     brand_voice = load_brand_voice()
 
-    try:
-        emails = generate_text(
-            system_prompt="You are a precise marketing email copywriter.",
-            user_prompt=build_prompt(source_content, purpose, brand_voice),
-        )
-    except AiGenerationError as exc:
-        print(f"Error: {exc}")
-        return
+    emails = generate_text(
+        system_prompt="You are a precise marketing email copywriter.",
+        user_prompt=build_prompt(source_content, purpose, brand_voice),
+    )
 
     path = save_text("email", emails)
     count = 3
@@ -86,4 +85,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

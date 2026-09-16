@@ -7,6 +7,7 @@ import csv
 from collections import defaultdict
 from pathlib import Path
 
+from haqs_toolkit.errors import command_errors
 from haqs_toolkit.utils.marketing import get_roi_log_path, welcome
 
 
@@ -90,6 +91,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+@command_errors
 def main(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
     welcome("automation ROI reporting")
@@ -97,4 +99,4 @@ def main(argv: list[str] | None = None) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

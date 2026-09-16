@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from haqs_toolkit.errors import command_errors
 from haqs_toolkit.utils.marketing import (
-    AiGenerationError,
     brand_voice_prompt_block,
     choose_option,
     generate_text,
@@ -197,7 +197,8 @@ Provide a meta title and meta description.
 """.strip()
 
 
-def main() -> None:
+@command_errors
+def main() -> int | None:
     welcome("landing page copy generation")
 
     offer_name = read_required(
@@ -244,28 +245,24 @@ def main() -> None:
     print("\nGenerating landing page copy...\n")
     brand_voice = load_brand_voice()
 
-    try:
-        landing_page_copy = generate_text(
-            system_prompt="You are a precise conversion copywriter for landing pages.",
-            user_prompt=build_prompt(
-                offer_name=offer_name,
-                offer_type=offer_type,
-                offer_description=offer_description,
-                audience=audience,
-                page_goal=page_goal,
-                tone=tone,
-                audience_problem=audience_problem,
-                main_benefit=main_benefit,
-                primary_cta=primary_cta,
-                credibility=credibility,
-                must_include=must_include,
-                avoid=avoid,
-                brand_voice=brand_voice,
-            ),
-        )
-    except AiGenerationError as exc:
-        print(f"Error: {exc}")
-        return
+    landing_page_copy = generate_text(
+        system_prompt="You are a precise conversion copywriter for landing pages.",
+        user_prompt=build_prompt(
+            offer_name=offer_name,
+            offer_type=offer_type,
+            offer_description=offer_description,
+            audience=audience,
+            page_goal=page_goal,
+            tone=tone,
+            audience_problem=audience_problem,
+            main_benefit=main_benefit,
+            primary_cta=primary_cta,
+            credibility=credibility,
+            must_include=must_include,
+            avoid=avoid,
+            brand_voice=brand_voice,
+        ),
+    )
 
     path = save_text("landing_page_copy", landing_page_copy)
     minutes_saved = 90
@@ -287,4 +284,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

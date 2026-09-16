@@ -148,7 +148,9 @@ Set your OpenAI API key for the current PowerShell session:
 $env:OPENAI_API_KEY="your-api-key-here"
 ```
 
-Or copy `.env.example` to `.env` and use a dotenv loader of your choice.
+Or copy `.env.example` to `.env` in the toolkit folder and fill in `OPENAI_API_KEY`.
+AI tools load this file automatically before making a request. Existing terminal
+environment variables take precedence.
 The toolkit does not automatically load `.env`; Codex or the terminal session
 must expose those variables before running AI-powered scripts.
 
@@ -273,3 +275,26 @@ Default estimates:
 - Landing page copy: 90 minutes saved per page
 - Project plan: 45 minutes saved per plan
 - Testimonial content: 10 minutes saved per item
+
+
+### Troubleshooting
+
+Commands explain expected failures with a next step and return a nonzero exit
+status. Check the named file, field, or setting, fix it, and rerun the command.
+Brief errors include the file path and JSON line/column when available. If a run
+fails after saving files, the error lists recorded output paths so you can review
+the partial results.
+
+Campaign tools can continue with template copy when AI is unavailable. A warning
+in the terminal explains the cause; review that copy before publishing.
+
+For an unexpected failure, enable Python tracebacks in PowerShell:
+
+```powershell
+$env:HAQS_DEBUG="1"
+# Repeat the command that failed.
+Remove-Item Env:HAQS_DEBUG
+```
+
+Debug mode also stops on AI failures instead of using template copy. Review
+technical details for sensitive information before sharing them.

@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
+from haqs_toolkit.errors import UserError, command_errors, record_saved, report_error
 from haqs_toolkit.generators.campaign_url_builder import add_utm_parameters
 from haqs_toolkit.runs import write_quality_check
 from haqs_toolkit.utils.marketing import load_brand_voice, read_url
@@ -74,7 +75,7 @@ EVENT_TRACKING_CHANNELS = {
 }
 
 
-class EventBriefError(ValueError):
+class EventBriefError(UserError):
     """Raised when an event brief cannot be loaded or validated."""
 
 
@@ -85,17 +86,34 @@ def ensure_event_packet_dirs(event_dir: Path) -> None:
 
 def load_event_brief(path: Path) -> dict[str, object]:
     if not path.exists():
-        raise EventBriefError(f"Missing required file: {path}")
+        raise EventBriefError(
+            f"Missing required file: {path}",
+            "Check the supplied path and add a brief.json "
+            "containing the required fields. "
+            "Use --list-fields to see the fields.",
+        )
 
     try:
         brief = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        raise EventBriefError(f"Invalid JSON in {path}: {exc.msg}") from exc
+        raise EventBriefError(
+            f"Invalid JSON at line {exc.lineno}, column {exc.colno}: {exc.msg}",
+            "Open this file and correct the JSON syntax at that location. "
+            "Use double quotes for keys and text, and remove trailing commas.",
+            path,
+        ) from exc
 
     if not isinstance(brief, dict):
         raise EventBriefError("brief.json must contain a JSON object.")
 
-    validate_event_brief(brief)
+    try:
+        validate_event_brief(brief)
+    except EventBriefError as exc:
+        raise EventBriefError(
+            exc.message,
+            "Edit the listed fields, save the file, then run the same command again.",
+            path,
+        ) from exc
     return brief
 
 
@@ -104,14 +122,16 @@ def validate_event_brief(brief: dict[str, object]) -> None:
     for field in REQUIRED_FIELDS:
         value = brief.get(field)
         if value is None or str(value).strip() == "":
-            errors.append(f"Missing required field: {field}")
+            errors.append(
+                f'Missing required field: {field}. Add a non-empty "{field}" value.'
+            )
 
     event_date = str(brief.get("event_date", "")).strip()
     if event_date:
         try:
             datetime.strptime(event_date, "%Y-%m-%d")
         except ValueError:
-            errors.append("Invalid event_date: use YYYY-MM-DD.")
+            errors.append("Invalid event_date: use YYYY-MM-DD, for example 2026-09-30.")
 
     registration_url = str(brief.get("registration_url", "")).strip()
     if registration_url:
@@ -235,9 +255,7 @@ def tools_from_lines(lines: list[str]) -> list[str]:
 def parse_event_details(text: str) -> dict[str, object]:
     lines = [line.strip() for line in text.splitlines()]
     meaningful_lines = [
-        line
-        for line in lines
-        if line and line.lower() not in {"displayed image"}
+        line for line in lines if line and line.lower() not in {"displayed image"}
     ]
     if not meaningful_lines:
         raise EventBriefError("Paste event page text before typing END.")
@@ -708,7 +726,7 @@ def write_event_assets(brief: dict[str, object], output_dir: Path) -> list[Path]
         path = output_dir / filename
         print(f"Writing {filename}...")
         path.write_text(content.strip() + "\n", encoding="utf-8")
-        paths.append(path)
+        paths.append(record_saved(path))
     return paths
 
 
@@ -743,6 +761,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+@command_errors
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -764,7 +783,7 @@ def main(argv: list[str] | None = None) -> int:
                 print("Generation cancelled.")
                 return 0
         except EventBriefError as exc:
-            print(f"Error: {exc}")
+            report_error(exc)
             return 1
         except EOFError:
             print("Error: Input ended before the event preview was confirmed.")
@@ -789,7 +808,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Reading brief: {brief_path}")
         brief = load_event_brief(brief_path)
     except EventBriefError as exc:
-        print(f"Error: {exc}")
+        report_error(exc)
         return 1
     print("Brief validation passed.")
     paths = write_event_assets(brief, output_dir)

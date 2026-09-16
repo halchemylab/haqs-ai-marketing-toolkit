@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
+from haqs_toolkit.errors import command_errors
 from haqs_toolkit.utils.marketing import (
     log_roi_event,
     print_roi_logged,
@@ -63,6 +64,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+@command_errors
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -126,4 +128,4 @@ def main(argv: list[str] | None = None) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

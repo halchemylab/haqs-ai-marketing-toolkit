@@ -10,6 +10,7 @@ from datetime import date, datetime, timedelta
 from importlib import resources
 from pathlib import Path
 
+from haqs_toolkit.errors import UserError, command_errors, record_saved
 from haqs_toolkit.utils.marketing import (
     log_roi_event,
     print_roi_logged,
@@ -108,7 +109,9 @@ def parse_date(raw_value: str) -> date:
     try:
         return datetime.strptime(raw_value, "%Y-%m-%d").date()
     except ValueError as exc:
-        raise ValueError("Use YYYY-MM-DD format, for example 2026-09-15.") from exc
+        raise UserError(
+            "Invalid launch date.", "Use YYYY-MM-DD format, for example 2026-09-15."
+        ) from exc
 
 
 def parse_channels(raw_value: str) -> set[str]:
@@ -296,13 +299,16 @@ def generate_project_plan(
 
     generic_path = timestamped_output_path("project_plan", "csv")
     write_csv(generic_path, rows, PROJECT_PLAN_FIELDNAMES)
+    record_saved(generic_path)
 
     asana_path = timestamped_output_path("project_plan_asana", "csv")
     asana_export = asana_rows(rows)
     write_csv(asana_path, asana_export, ASANA_FIELDNAMES)
+    record_saved(asana_path)
 
     readable_path = timestamped_output_path("project_plan_review", "md")
     write_readable_plan(readable_path, campaign_name, rows)
+    record_saved(readable_path)
     return rows, generic_path, asana_path, readable_path
 
 
@@ -393,6 +399,7 @@ def cli_inputs(
     )
 
 
+@command_errors
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -436,4 +443,4 @@ def main(argv: list[str] | None = None) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

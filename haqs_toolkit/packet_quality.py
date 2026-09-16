@@ -7,6 +7,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from haqs_toolkit.errors import UserError, command_errors, report_error
+
 CHECKED_EXTENSIONS = {".md", ".txt"}
 PLACEHOLDER_PATTERNS = [
     re.compile(r"\[url here\]", re.IGNORECASE),
@@ -121,10 +123,9 @@ def scan_file(path: Path) -> list[QualityIssue]:
                         path=path,
                         line_number=line_number,
                         code="placeholder",
-                    message=(
-                        "Unresolved placeholder or sample text: "
-                        f"{line.strip()}"
-                    ),
+                        message=(
+                            f"Unresolved placeholder or sample text: {line.strip()}"
+                        ),
                     )
                 )
                 break
@@ -136,8 +137,7 @@ def scan_file(path: Path) -> list[QualityIssue]:
                     line_number=line_number,
                     code="missing-cta-link",
                     message=(
-                        "CTA-like line does not include a nearby link: "
-                        f"{line.strip()}"
+                        f"CTA-like line does not include a nearby link: {line.strip()}"
                     ),
                 )
             )
@@ -186,6 +186,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+@command_errors
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     scan_dir = resolve_scan_dir(args.path)
@@ -193,7 +194,12 @@ def main(argv: list[str] | None = None) -> int:
     try:
         issues = scan_path(args.path)
     except FileNotFoundError as exc:
-        print(f"Error: {exc}")
+        report_error(
+            UserError(
+                str(exc),
+                "Check the supplied path and retry with an existing file or folder.",
+            )
+        )
         return 2
 
     print(format_report(issues, scan_dir if scan_dir.is_dir() else scan_dir.parent))

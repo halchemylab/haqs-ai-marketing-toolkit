@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 from haqs_toolkit import packet_quality
+from haqs_toolkit.errors import record_saved
 
 RUNS_DIR = Path("runs")
 
@@ -60,7 +61,7 @@ def write_quality_check(
     report = packet_quality.format_report(issues, run_dir)
     path = run_dir / "quality-check.md"
     path.write_text(f"# Quality Check\n\n{report}\n", encoding="utf-8")
-    return path, issues
+    return record_saved(path), issues
 
 
 def write_packet_index(
@@ -97,4 +98,4 @@ def write_packet_index(
 
     path = run_dir / "packet-index.md"
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return path
+    return record_saved(path)

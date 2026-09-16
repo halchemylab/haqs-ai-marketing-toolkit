@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from haqs_toolkit import campaigns, events
+from haqs_toolkit.errors import command_errors, record_saved, report_error
 from haqs_toolkit.generators import (
     email_generator,
     landing_page_copy_generator,
@@ -93,13 +94,13 @@ def parse_assets(raw_assets: str | None, job_type: str, scope: str) -> list[str]
 
 def write_json(path: Path, data: dict[str, object]) -> Path:
     path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-    return path
+    return record_saved(path)
 
 
 def write_text(path: Path, content: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content.strip() + "\n", encoding="utf-8")
-    return path
+    return record_saved(path)
 
 
 def write_event_run_assets(
@@ -126,7 +127,7 @@ def write_event_run_assets(
     if ASSET_QR_CODE in selected_assets:
         qr_path = output_dir / "qr-code.png"
         qr_code_generator.create_qr_code(tracking_urls["qr_code"]).save(qr_path)
-        paths.append(qr_path)
+        paths.append(record_saved(qr_path))
     if ASSET_EMAIL in selected_assets:
         paths.append(
             write_text(
@@ -178,7 +179,7 @@ def write_campaign_run_assets(
     if ASSET_QR_CODE in selected_assets:
         qr_path = output_dir / "qr-code.png"
         qr_code_generator.create_qr_code(tracking_urls["qr_code"]).save(qr_path)
-        paths.append(qr_path)
+        paths.append(record_saved(qr_path))
     if ASSET_EMAIL in selected_assets:
         email_copy = campaigns.ai_or_fallback(
             system_prompt="You are a precise marketing email copywriter.",
@@ -353,6 +354,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+@command_errors
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -385,7 +387,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             brief = load_brief(args.brief, job_type)
         except (campaigns.CampaignBriefError, events.EventBriefError) as exc:
-            print(f"Error: {exc}")
+            report_error(exc)
             return 1
     else:
         brief = brief_from_inputs(job_type)
@@ -395,7 +397,7 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 campaigns.validate_campaign_brief(brief)
         except (campaigns.CampaignBriefError, events.EventBriefError) as exc:
-            print(f"Error: {exc}")
+            report_error(exc)
             return 1
 
     if scope == SCOPE_SELECTED and not args.assets:

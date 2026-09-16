@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 
+from haqs_toolkit.errors import UserError, command_errors
 from haqs_toolkit.utils.marketing import (
     AiGenerationError,
     brand_voice_prompt_block,
@@ -96,35 +97,36 @@ def parse_json_response(response_text: str) -> dict[str, str]:
     return {key: str(parsed[key]).strip() for key in OUTPUT_FORMATS}
 
 
-def main() -> None:
+@command_errors
+def main() -> int | None:
     welcome("content repurposing")
     source_content = read_multiline("Enter or Paste the Content Here:")
     if not source_content:
-        print("No content entered. Exiting.")
-        return
+        raise UserError(
+            "No source content was entered.",
+            "Run the tool again, paste your content, then enter a blank line.",
+        )
 
     print("\nGenerating content pack...\n")
     brand_voice = load_brand_voice()
-    try:
-        response_text = generate_text(
-            system_prompt=(
-                "You are a precise marketing strategist and content "
-                "repurposing assistant."
-            ),
-            user_prompt=build_prompt(source_content, brand_voice),
-            text_format=CONTENT_PACK_SCHEMA,
-        )
-    except AiGenerationError as exc:
-        print(f"Error: {exc}")
-        return
+    response_text = generate_text(
+        system_prompt=(
+            "You are a precise marketing strategist and content repurposing assistant."
+        ),
+        user_prompt=build_prompt(source_content, brand_voice),
+        text_format=CONTENT_PACK_SCHEMA,
+    )
 
     try:
         content_pack = parse_json_response(response_text)
     except ValueError as exc:
         path = save_text("content_repurposer_raw_response", response_text)
-        print(f"Error: AI response could not be parsed: {exc}")
-        print(f"Raw response saved to: {path}")
-        return
+        raise AiGenerationError(
+            "The AI returned an unusable content format.",
+            "Run the tool again. If it keeps failing, review the saved raw response "
+            "and check OPENAI_MODEL.",
+            path,
+        ) from exc
 
     saved_paths = []
     roi_results = []
@@ -157,4 +159,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

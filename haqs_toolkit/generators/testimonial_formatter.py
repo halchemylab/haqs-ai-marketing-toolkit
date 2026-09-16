@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from haqs_toolkit.errors import UserError, command_errors
 from haqs_toolkit.utils.marketing import (
     AiGenerationError,
     brand_voice_prompt_block,
@@ -293,12 +294,15 @@ def format_content_pack(content_pack: dict[str, Any]) -> dict[str, str]:
     }
 
 
+@command_errors
 def main() -> None:
     welcome("testimonial formatting")
     feedback = read_multiline("Paste the raw customer feedback below:")
     if not feedback:
-        print("No customer feedback entered. Exiting.")
-        return
+        raise UserError(
+            "No customer feedback was entered.",
+            "Run the tool again, paste the feedback, then enter a blank line.",
+        )
 
     customer_name = read_optional("Customer name (optional): ")
     job_title = read_optional("Job title (optional): ")
@@ -317,21 +321,17 @@ def main() -> None:
 
     print("\nFormatting testimonial content...\n")
     brand_voice = load_brand_voice()
-    try:
-        response_text = generate_text(
-            system_prompt=(
-                "You are a precise testimonial editor. Preserve customer "
-                "meaning, protect "
-                "privacy, and never invent or quantify claims."
-            ),
-            user_prompt=build_prompt(
-                feedback, attribution, product_or_service, brand_voice
-            ),
-            text_format=TESTIMONIAL_PACK_SCHEMA,
-        )
-    except AiGenerationError as exc:
-        print(f"Error: {exc}")
-        return
+    response_text = generate_text(
+        system_prompt=(
+            "You are a precise testimonial editor. Preserve customer "
+            "meaning, protect "
+            "privacy, and never invent or quantify claims."
+        ),
+        user_prompt=build_prompt(
+            feedback, attribution, product_or_service, brand_voice
+        ),
+        text_format=TESTIMONIAL_PACK_SCHEMA,
+    )
 
     try:
         content_pack = parse_testimonial_response(
@@ -339,9 +339,12 @@ def main() -> None:
         )
     except ValueError as exc:
         path = save_text("testimonial_formatter_raw_response", response_text)
-        print(f"Error: AI response could not be parsed: {exc}")
-        print(f"Raw response saved to: {path}")
-        return
+        raise AiGenerationError(
+            "The AI returned an unusable content format.",
+            "Run the tool again. If it keeps failing, review the saved raw response "
+            "and check OPENAI_MODEL.",
+            path,
+        ) from exc
     formatted_outputs = format_content_pack(content_pack)
 
     saved_paths = []
@@ -374,4 +377,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
