@@ -31,6 +31,13 @@ haqs-create = "haqs_toolkit.create:main"
 haqs-campaign = "haqs_toolkit.campaigns:main"
 haqs-event = "haqs_toolkit.events:main"
 
+[project.optional-dependencies]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=8",
+    "ruff",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
