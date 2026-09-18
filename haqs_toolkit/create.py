@@ -6,7 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
-from haqs_toolkit import campaigns, events
+from haqs_toolkit import campaigns, events, intake
 from haqs_toolkit.errors import command_errors, record_saved, report_error
 from haqs_toolkit.generators import (
     email_generator,
@@ -22,9 +22,6 @@ from haqs_toolkit.runs import (
 from haqs_toolkit.utils.marketing import (
     choose_option,
     load_brand_voice,
-    read_optional,
-    read_required,
-    read_url,
 )
 
 SCOPE_COMPLETE = "complete"
@@ -158,7 +155,9 @@ def write_campaign_run_assets(
     selected_assets: list[str],
 ) -> list[Path]:
     brand_voice = load_brand_voice()
-    source_material = campaigns.campaign_source_material(brief, "")
+    source_material = campaigns.campaign_source_material(
+        brief, str(brief.get("source_material", ""))
+    )
     tracking_urls = campaigns.campaign_tracking_urls(brief)
     paths = [
         write_text(
@@ -276,34 +275,7 @@ def run_creation(
 
 
 def brief_from_inputs(job_type: str) -> dict[str, object]:
-    if job_type == JOB_EVENT:
-        return {
-            "event_name": read_required("Event name: "),
-            "event_date": read_required("Event date (YYYY-MM-DD): "),
-            "event_time": read_optional("Event time: "),
-            "timezone": read_optional("Timezone: "),
-            "location": read_optional("Location: "),
-            "audience": read_required("Audience: "),
-            "goal": read_required("Goal: "),
-            "offer": read_optional("Offer or promise: "),
-            "cta": read_required("CTA: "),
-            "registration_url": read_url("Registration URL: "),
-            "tone": read_optional("Tone: ") or "Clear and practical",
-            "channels": ["email", "social"],
-        }
-
-    return {
-        "campaign_name": read_required("Campaign name: "),
-        "campaign_type": read_optional("Campaign type: ") or "offer",
-        "audience": read_required("Audience: "),
-        "goal": read_required("Goal: "),
-        "offer": read_optional("Offer: "),
-        "cta": read_required("CTA: "),
-        "landing_page_url": read_url("Landing page URL: "),
-        "launch_date": read_optional("Launch date (YYYY-MM-DD): "),
-        "tone": read_optional("Tone: ") or "Clear and practical",
-        "channels": campaigns.DEFAULT_CHANNELS,
-    }
+    return intake.collect_brief(job_type)
 
 
 def choose_assets(job_type: str) -> list[str]:

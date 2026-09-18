@@ -46,6 +46,12 @@ The user-facing creation command is:
 haqs-create
 ```
 
+Interactive creation accepts pasted event descriptions or campaign briefs, or a
+guided questionnaire. End pasted text with `END` on its own line. Explicit labels
+such as `Audience:`, `Goal:`, `CTA:`, and `Launch date:` are recognized; missing
+required details are requested without repeating supplied answers. Original
+source text is saved with the brief.
+
 Use `haqs-create` for the two normal marketing creation modes:
 
 - Complete packet: generate the recommended assets from one event or campaign

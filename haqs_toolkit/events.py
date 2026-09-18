@@ -175,7 +175,10 @@ def parse_event_date_line(line: str) -> tuple[str, str, str] | None:
     month = MONTHS[match.group("month").lower()]
     day = int(match.group("day"))
     year = int(match.group("year"))
-    event_date = datetime(year, month, day).strftime("%Y-%m-%d")
+    try:
+        event_date = datetime(year, month, day).strftime("%Y-%m-%d")
+    except ValueError:
+        return None
     event_time = (match.group("time") or "").strip()
     timezone = (match.group("timezone") or "").strip()
     if timezone and event_time.endswith(timezone):
