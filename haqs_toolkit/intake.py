@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime
 
 from haqs_toolkit import campaigns, events
 from haqs_toolkit.utils.marketing import (
@@ -10,6 +11,7 @@ from haqs_toolkit.utils.marketing import (
     read_optional,
     read_required,
     read_url,
+    validate_url,
 )
 
 
@@ -94,7 +96,28 @@ def read_field(field: str, required: bool) -> object:
     if field.endswith("_url"):
         return read_url(f"{label}: ")
     reader = read_required if required else read_optional
-    return reader(f"{label}{hint}: ")
+    while True:
+        value = reader(f"{label}{hint}: ")
+        try:
+            validate_field(field, value)
+        except ValueError as exc:
+            print(exc)
+            continue
+        return value
+
+
+def validate_field(field: str, value: object) -> None:
+    if not value:
+        return
+    if field.endswith("_date"):
+        try:
+            if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(value)):
+                raise ValueError
+            datetime.strptime(str(value), "%Y-%m-%d")
+        except ValueError as exc:
+            raise ValueError("Enter a valid date in YYYY-MM-DD format.") from exc
+    if field.endswith("_url"):
+        validate_url(str(value))
 
 
 def collect_brief(job_type: str, assets: list[str] | None = None) -> dict[str, object]:
@@ -115,6 +138,13 @@ def collect_brief(job_type: str, assets: list[str] | None = None) -> dict[str, o
         brief = parse_details("\n".join(lines), job_type)
     required = required_for(job_type, assets)
     for field in fields_for(job_type, assets):
+        if brief.get(field):
+            try:
+                validate_field(field, brief[field])
+            except ValueError as exc:
+                print(f"{field.replace('_', ' ').title()}: {exc}")
+                brief[field] = read_field(field, field in required)
+                brief.setdefault("edited_fields", []).append(field)
         if not brief.get(field) and (not pasted or field in required):
             brief[field] = read_field(field, field in required)
             brief.setdefault("edited_fields", []).append(field)
@@ -122,3 +152,61 @@ def collect_brief(job_type: str, assets: list[str] | None = None) -> dict[str, o
     if not brief.get("channels"):
         brief["channels"] = campaigns.DEFAULT_CHANNELS.copy()
     return brief
+
+
+def review_brief(
+    brief: dict[str, object], job_type: str, assets: list[str] | None = None
+) -> bool:
+    fields = fields_for(job_type, assets)
+    # Show supplied optional fields too, including tracking overrides.
+    extras = events.RECOMMENDED_FIELDS + campaigns.RECOMMENDED_FIELDS + ["takeaways"]
+    fields += [
+        field
+        for field in dict.fromkeys(extras)
+        if field in brief and field not in fields
+    ]
+    required = required_for(job_type, assets)
+    while True:
+        print("\nBrief preview")
+        for number, field in enumerate(fields, 1):
+            value = brief.get(field, "")
+            if isinstance(value, list):
+                value = ", ".join(str(item) for item in value)
+            print(
+                f"{number}. {field.replace('_', ' ').title()}: {value or '[not set]'}"
+            )
+        valid = True
+        try:
+            validator = (
+                events.validate_event_brief
+                if job_type == "event"
+                else campaigns.validate_campaign_brief
+            )
+            validator(brief, required_fields=required)
+            for field in fields:
+                validate_field(field, brief.get(field))
+        except ValueError as exc:
+            print(f"Please fix: {exc}")
+            valid = False
+        choice = input(
+            "Field number to edit, Enter to generate, or Q to cancel: "
+        ).strip()
+        if choice.lower() == "q":
+            return False
+        if not choice and valid:
+            return True
+        if not choice:
+            continue
+        if not choice.isdigit() or not 1 <= int(choice) <= len(fields):
+            print("Please choose a listed field number.")
+            continue
+        field = fields[int(choice) - 1]
+        if field == "takeaways":
+            value = read_optional("Takeaways (separate items with |): ")
+            brief[field] = [item.strip() for item in value.split("|") if item.strip()]
+        else:
+            brief[field] = read_field(field, field in required)
+        edited = list(brief.get("edited_fields", []))
+        if field not in edited:
+            edited.append(field)
+        brief["edited_fields"] = edited

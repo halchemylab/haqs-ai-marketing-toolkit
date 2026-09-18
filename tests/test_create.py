@@ -85,8 +85,19 @@ class CreateFlowTests(unittest.TestCase):
             self.assertIn("example.com", quality_report)
 
     @patch("haqs_toolkit.create.open_output_folder")
+    def test_cancel_preview_does_not_create_a_run(self, opener):
+        with TemporaryDirectory() as directory:
+            with patch(
+                "builtins.input",
+                side_effect=["2", "1", "1", "2", "Workshop", "https://haqs.test", "q"],
+            ):
+                self.assertEqual(create.main(["--runs-dir", directory]), 0)
+            self.assertEqual(list(Path(directory).iterdir()), [])
+            opener.assert_not_called()
+
+    @patch("haqs_toolkit.create.open_output_folder")
     def test_interactive_url_only_asks_for_name_and_url_after_assets(self, opener):
-        answers = ["2", "1", "1", "2", "Workshop", "https://haqs.test/join"]
+        answers = ["2", "1", "1", "2", "Workshop", "https://haqs.test/join", ""]
         with TemporaryDirectory() as directory:
             with patch("builtins.input", side_effect=answers) as prompt:
                 code = create.main(["--runs-dir", directory])

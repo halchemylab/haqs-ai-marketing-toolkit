@@ -56,3 +56,41 @@ class IntakeTests(unittest.TestCase):
         self.assertEqual(brief["launch_date"], "2026-10-01")
         self.assertNotIn("audience", brief)
         self.assertNotIn("landing_page_url", brief)
+
+    def test_bad_date_is_retried_before_the_next_field(self):
+        with patch(
+            "builtins.input",
+            side_effect=["2", "Launch", "offer", "2026-02-30", "2026-10-01", "email"],
+        ) as prompt:
+            brief = intake.collect_brief("campaign", ["project_plan"])
+        self.assertEqual(brief["launch_date"], "2026-10-01")
+        self.assertIn("Launch Date", prompt.call_args_list[4].args[0])
+        self.assertIn("Channels", prompt.call_args_list[5].args[0])
+
+    def test_pasted_invalid_date_is_corrected_without_losing_other_details(self):
+        with patch(
+            "builtins.input",
+            side_effect=[
+                "1",
+                "Campaign name: Launch",
+                "Launch date: 2026-02-30",
+                "END",
+                "2026-10-01",
+            ],
+        ):
+            brief = intake.collect_brief("campaign", ["project_plan"])
+        self.assertEqual(brief["campaign_name"], "Launch")
+        self.assertEqual(brief["launch_date"], "2026-10-01")
+
+    def test_preview_edits_url_and_preserves_other_fields(self):
+        brief = {"event_name": "Workshop", "registration_url": "https://haqs.test/old"}
+        with patch("builtins.input", side_effect=["2", "https://haqs.test/new", ""]):
+            self.assertTrue(intake.review_brief(brief, "event", ["qr_code"]))
+        self.assertEqual(brief["registration_url"], "https://haqs.test/new")
+        self.assertEqual(brief["event_name"], "Workshop")
+
+    def test_preview_will_not_generate_with_an_invalid_date(self):
+        brief = {"campaign_name": "Launch", "launch_date": "bad"}
+        with patch("builtins.input", side_effect=["", "3", "2026-10-01", ""]):
+            self.assertTrue(intake.review_brief(brief, "campaign", ["project_plan"]))
+        self.assertEqual(brief["launch_date"], "2026-10-01")

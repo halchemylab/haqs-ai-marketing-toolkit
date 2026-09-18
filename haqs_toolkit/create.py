@@ -339,6 +339,11 @@ def build_parser() -> argparse.ArgumentParser:
             "email, social, landing_page, project_plan."
         ),
     )
+    parser.add_argument(
+        "--review",
+        action="store_true",
+        help="Review and edit a saved brief before generation.",
+    )
     parser.add_argument("--runs-dir", type=Path, default=Path("runs"))
     return parser
 
@@ -384,18 +389,10 @@ def main(argv: list[str] | None = None) -> int:
             return 1
     else:
         brief = brief_from_inputs(job_type, intake_assets)
-        try:
-            if job_type == JOB_EVENT:
-                events.validate_event_brief(
-                    brief, required_fields=intake.required_for(job_type, intake_assets)
-                )
-            else:
-                campaigns.validate_campaign_brief(
-                    brief, required_fields=intake.required_for(job_type, intake_assets)
-                )
-        except (campaigns.CampaignBriefError, events.EventBriefError) as exc:
-            report_error(exc)
-            return 1
+    if not args.brief or args.review:
+        if not intake.review_brief(brief, job_type, intake_assets):
+            print("Generation cancelled. No run was created.")
+            return 0
 
     run_dir = run_creation(
         brief=brief,

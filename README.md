@@ -50,7 +50,11 @@ Interactive creation accepts pasted event descriptions or campaign briefs, or a
 guided questionnaire. End pasted text with `END` on its own line. Explicit labels
 such as `Audience:`, `Goal:`, `CTA:`, and `Launch date:` are recognized; missing
 required details are requested without repeating supplied answers. Original
-source text is saved with the brief.
+source text is saved with the brief. Dates and URLs are checked during intake.
+Before generation, an editable brief preview lets you change a numbered field,
+press Enter to generate, or enter `Q` to cancel without creating a run. Saved
+brief commands remain non-interactive; add `--review` to edit a valid saved brief
+before generating a new run. The original saved file is left intact.
 
 Use `haqs-create` for the two normal marketing creation modes:
 

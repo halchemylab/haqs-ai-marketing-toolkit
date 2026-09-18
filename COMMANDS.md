@@ -41,6 +41,11 @@ runs/<job-slug>-<job-type>-<scope>-YYYY-MM-DD-HHMM/
   quality-check.md
 ```
 
+Choose selected assets before entering a brief. Then paste existing details
+(finish with `END`) or answer guided questions tailored to those assets.
+Review the brief and edit fields by number, press Enter to generate, or use `Q`
+to cancel. Add `--review` to review a saved brief supplied with `--brief`.
+
 Quality checks run automatically after assets are generated.
 
 After generation, `haqs-create` automatically opens the exact run's `outputs/`
