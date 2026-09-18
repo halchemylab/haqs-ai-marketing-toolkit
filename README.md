@@ -91,6 +91,11 @@ User-facing copy, summaries, and source notes are saved as `.txt` files so they
 open in a regular text editor. Packet indexes and quality reports remain `.md`
 files because they use Markdown navigation and report formatting.
 
+Selected assets are chosen before the brief. URL/QR-only runs ask for a name
+and destination URL; plan-only runs ask for a name, campaign type, launch date,
+and channels. Selected project plans require a launch date. Minimal saved JSON
+briefs are also supported for these selections.
+
 Selected asset runs use the same brief but generate only the chosen outputs,
 such as tracked URL plus QR code, or email sequence plus social posts.
 

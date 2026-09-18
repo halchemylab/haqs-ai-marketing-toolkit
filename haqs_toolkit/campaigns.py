@@ -80,7 +80,9 @@ def ensure_campaign_packet_dirs(campaign_dir: Path) -> None:
     (campaign_dir / "outputs").mkdir(parents=True, exist_ok=True)
 
 
-def load_campaign_brief(path: Path) -> dict[str, object]:
+def load_campaign_brief(
+    path: Path, *, required_fields: list[str] | None = None
+) -> dict[str, object]:
     if not path.exists():
         raise CampaignBriefError(
             f"Missing required file: {path}",
@@ -103,7 +105,7 @@ def load_campaign_brief(path: Path) -> dict[str, object]:
         raise CampaignBriefError("brief.json must contain a JSON object.")
 
     try:
-        validate_campaign_brief(brief)
+        validate_campaign_brief(brief, required_fields=required_fields)
     except CampaignBriefError as exc:
         raise CampaignBriefError(
             exc.message,
@@ -113,9 +115,11 @@ def load_campaign_brief(path: Path) -> dict[str, object]:
     return brief
 
 
-def validate_campaign_brief(brief: dict[str, object]) -> None:
+def validate_campaign_brief(
+    brief: dict[str, object], *, required_fields: list[str] | None = None
+) -> None:
     errors = []
-    for field in REQUIRED_FIELDS:
+    for field in REQUIRED_FIELDS if required_fields is None else required_fields:
         value = brief.get(field)
         if value is None or str(value).strip() == "":
             errors.append(

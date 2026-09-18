@@ -46,3 +46,13 @@ class IntakeTests(unittest.TestCase):
 
         brief = intake.parse_details("Event name: Workshop\nAudience: Owners", "event")
         self.assertEqual(normalized_event_brief(brief)["audience"], "Owners")
+
+    def test_plan_only_collects_planning_details(self):
+        with patch(
+            "builtins.input",
+            side_effect=["2", "Launch", "offer", "2026-10-01", "email,linkedin"],
+        ):
+            brief = intake.collect_brief("campaign", ["project_plan"])
+        self.assertEqual(brief["launch_date"], "2026-10-01")
+        self.assertNotIn("audience", brief)
+        self.assertNotIn("landing_page_url", brief)

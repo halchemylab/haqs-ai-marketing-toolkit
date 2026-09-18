@@ -13,18 +13,33 @@ from haqs_toolkit.utils.marketing import (
 )
 
 
-def fields_for(job_type: str) -> list[str]:
-    if job_type == "event":
-        return events.RECOMMENDED_FIELDS.copy()
-    return campaigns.RECOMMENDED_FIELDS[:10]
+def fields_for(job_type: str, assets: list[str] | None = None) -> list[str]:
+    fields = (
+        events.RECOMMENDED_FIELDS.copy()
+        if job_type == "event"
+        else campaigns.RECOMMENDED_FIELDS[:10]
+    )
+    if assets is None or set(assets) & {"email", "social", "landing_page"}:
+        return fields
+    needed = {"event_name" if job_type == "event" else "campaign_name"}
+    if set(assets) & {"tracked_url", "qr_code"}:
+        needed.add("registration_url" if job_type == "event" else "landing_page_url")
+    if "project_plan" in assets:
+        needed.update({"campaign_type", "launch_date", "channels"})
+    return [field for field in fields if field in needed]
 
 
-def required_for(job_type: str) -> list[str]:
-    return (
+def required_for(job_type: str, assets: list[str] | None = None) -> list[str]:
+    required = (
         events.REQUIRED_FIELDS.copy()
         if job_type == "event"
         else campaigns.REQUIRED_FIELDS.copy()
     )
+    fields = fields_for(job_type, assets)
+    required = [field for field in required if field in fields]
+    if assets is not None and "project_plan" in assets:
+        required.append("launch_date")
+    return required
 
 
 def parse_details(text: str, job_type: str) -> dict[str, object]:
@@ -82,7 +97,7 @@ def read_field(field: str, required: bool) -> object:
     return reader(f"{label}{hint}: ")
 
 
-def collect_brief(job_type: str) -> dict[str, object]:
+def collect_brief(job_type: str, assets: list[str] | None = None) -> dict[str, object]:
     method = choose_option(
         "What do you need? Start with existing details or a guided brief.",
         ["Paste event description / campaign brief", "Answer guided questions"],
@@ -98,8 +113,8 @@ def collect_brief(job_type: str) -> dict[str, object]:
                 break
             lines.append(line)
         brief = parse_details("\n".join(lines), job_type)
-    required = required_for(job_type)
-    for field in fields_for(job_type):
+    required = required_for(job_type, assets)
+    for field in fields_for(job_type, assets):
         if not brief.get(field) and (not pasted or field in required):
             brief[field] = read_field(field, field in required)
             brief.setdefault("edited_fields", []).append(field)

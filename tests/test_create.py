@@ -43,9 +43,9 @@ class CreateFlowTests(unittest.TestCase):
                 with patch(
                     "haqs_toolkit.create.qr_code_generator.create_qr_code"
                 ) as create_qr_code:
-                    create_qr_code.return_value.save.side_effect = (
-                        lambda path: Path(path).write_bytes(b"qr")
-                    )
+                    create_qr_code.return_value.save.side_effect = lambda path: Path(
+                        path
+                    ).write_bytes(b"qr")
                     run_dir = create.run_creation(
                         brief=brief,
                         job_type=create.JOB_EVENT,
@@ -81,10 +81,45 @@ class CreateFlowTests(unittest.TestCase):
             self.assertIn("utm_source=qr_code", qr_url)
             self.assertNotIn("utm_source=linkedin", qr_url)
 
-            quality_report = (run_dir / "quality-check.md").read_text(
-                encoding="utf-8"
-            )
+            quality_report = (run_dir / "quality-check.md").read_text(encoding="utf-8")
             self.assertIn("example.com", quality_report)
+
+    @patch("haqs_toolkit.create.open_output_folder")
+    def test_interactive_url_only_asks_for_name_and_url_after_assets(self, opener):
+        answers = ["2", "1", "1", "2", "Workshop", "https://haqs.test/join"]
+        with TemporaryDirectory() as directory:
+            with patch("builtins.input", side_effect=answers) as prompt:
+                code = create.main(["--runs-dir", directory])
+            self.assertEqual(code, 0)
+            self.assertEqual(prompt.call_count, len(answers))
+            outputs = opener.call_args.args[0]
+            self.assertTrue((outputs / "campaign-url.txt").exists())
+            self.assertFalse((outputs / "email-sequence.txt").exists())
+
+    @patch("haqs_toolkit.create.open_output_folder")
+    def test_minimal_saved_campaign_brief_generates_tracking_url(self, opener):
+        with TemporaryDirectory() as directory:
+            brief = Path(directory) / "brief.json"
+            brief.write_text(
+                '{"campaign_name": "Launch", "landing_page_url": "https://haqs.test"}',
+                encoding="utf-8",
+            )
+            code = create.main(
+                [
+                    "--scope",
+                    "selected",
+                    "--job-type",
+                    "campaign",
+                    "--assets",
+                    "tracked_url",
+                    "--brief",
+                    str(brief),
+                    "--runs-dir",
+                    str(Path(directory) / "runs"),
+                ]
+            )
+            self.assertEqual(code, 0)
+            self.assertTrue((opener.call_args.args[0] / "campaign-url.txt").exists())
 
     @patch("haqs_toolkit.create.open_output_folder")
     def test_main_can_create_selected_event_from_existing_brief(self, opener):

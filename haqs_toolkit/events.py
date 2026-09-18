@@ -84,7 +84,9 @@ def ensure_event_packet_dirs(event_dir: Path) -> None:
     (event_dir / "outputs").mkdir(parents=True, exist_ok=True)
 
 
-def load_event_brief(path: Path) -> dict[str, object]:
+def load_event_brief(
+    path: Path, *, required_fields: list[str] | None = None
+) -> dict[str, object]:
     if not path.exists():
         raise EventBriefError(
             f"Missing required file: {path}",
@@ -107,7 +109,7 @@ def load_event_brief(path: Path) -> dict[str, object]:
         raise EventBriefError("brief.json must contain a JSON object.")
 
     try:
-        validate_event_brief(brief)
+        validate_event_brief(brief, required_fields=required_fields)
     except EventBriefError as exc:
         raise EventBriefError(
             exc.message,
@@ -117,9 +119,11 @@ def load_event_brief(path: Path) -> dict[str, object]:
     return brief
 
 
-def validate_event_brief(brief: dict[str, object]) -> None:
+def validate_event_brief(
+    brief: dict[str, object], *, required_fields: list[str] | None = None
+) -> None:
     errors = []
-    for field in REQUIRED_FIELDS:
+    for field in REQUIRED_FIELDS if required_fields is None else required_fields:
         value = brief.get(field)
         if value is None or str(value).strip() == "":
             errors.append(

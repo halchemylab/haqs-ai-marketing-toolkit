@@ -110,7 +110,12 @@ def write_event_run_assets(
     paths = [
         write_text(
             output_dir / "event-summary.txt",
-            events.event_summary_markdown(brief, brand_voice),
+            (
+                events.event_summary_markdown(brief, brand_voice)
+                if set(selected_assets)
+                & {ASSET_EMAIL, ASSET_SOCIAL, ASSET_LANDING_PAGE}
+                else f"# {brief['event_name']}\n\n{events.brief_text(brief)}"
+            ),
         )
     ]
 
@@ -158,7 +163,11 @@ def write_campaign_run_assets(
     source_material = campaigns.campaign_source_material(
         brief, str(brief.get("source_material", ""))
     )
-    tracking_urls = campaigns.campaign_tracking_urls(brief)
+    tracking_urls = (
+        campaigns.campaign_tracking_urls(brief)
+        if set(selected_assets) - {ASSET_PROJECT_PLAN}
+        else {}
+    )
     paths = [
         write_text(
             output_dir / "campaign-summary.txt",
@@ -274,8 +283,10 @@ def run_creation(
     return run_dir
 
 
-def brief_from_inputs(job_type: str) -> dict[str, object]:
-    return intake.collect_brief(job_type)
+def brief_from_inputs(
+    job_type: str, assets: list[str] | None = None
+) -> dict[str, object]:
+    return intake.collect_brief(job_type, assets)
 
 
 def choose_assets(job_type: str) -> list[str]:
@@ -302,10 +313,16 @@ def choose_assets(job_type: str) -> list[str]:
         print("Please choose valid asset numbers.")
 
 
-def load_brief(path: Path, job_type: str) -> dict[str, object]:
+def load_brief(
+    path: Path, job_type: str, assets: list[str] | None = None
+) -> dict[str, object]:
     if job_type == JOB_EVENT:
-        return events.load_event_brief(path)
-    return campaigns.load_campaign_brief(path)
+        return events.load_event_brief(
+            path, required_fields=intake.required_for(job_type, assets)
+        )
+    return campaigns.load_campaign_brief(
+        path, required_fields=intake.required_for(job_type, assets)
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -355,25 +372,30 @@ def main(argv: list[str] | None = None) -> int:
     elif args.scope == SCOPE_SELECTED:
         parser.error("--assets is required when --scope selected is used.")
 
+    if scope == SCOPE_SELECTED and not args.assets:
+        selected_assets = choose_assets(job_type)
+
+    intake_assets = selected_assets if scope == SCOPE_SELECTED else None
     if args.brief:
         try:
-            brief = load_brief(args.brief, job_type)
+            brief = load_brief(args.brief, job_type, intake_assets)
         except (campaigns.CampaignBriefError, events.EventBriefError) as exc:
             report_error(exc)
             return 1
     else:
-        brief = brief_from_inputs(job_type)
+        brief = brief_from_inputs(job_type, intake_assets)
         try:
             if job_type == JOB_EVENT:
-                events.validate_event_brief(brief)
+                events.validate_event_brief(
+                    brief, required_fields=intake.required_for(job_type, intake_assets)
+                )
             else:
-                campaigns.validate_campaign_brief(brief)
+                campaigns.validate_campaign_brief(
+                    brief, required_fields=intake.required_for(job_type, intake_assets)
+                )
         except (campaigns.CampaignBriefError, events.EventBriefError) as exc:
             report_error(exc)
             return 1
-
-    if scope == SCOPE_SELECTED and not args.assets:
-        selected_assets = choose_assets(job_type)
 
     run_dir = run_creation(
         brief=brief,
