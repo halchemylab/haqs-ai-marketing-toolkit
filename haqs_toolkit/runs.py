@@ -64,6 +64,39 @@ def write_quality_check(
     return record_saved(path), issues
 
 
+def result_next_steps(output_paths: list[Path], quality_issue_count: int) -> list[str]:
+    """Give actions only for files that were actually generated."""
+    steps = []
+    if quality_issue_count:
+        steps.append(
+            f"Fix the {quality_issue_count} issue(s) listed in quality-check.md first."
+        )
+    steps.append("Confirm dates, links, prices, claims, and names before publishing.")
+    actions = {
+        "campaign-url.txt": (
+            "Test the links in campaign-url.txt, then use them in your campaign."
+        ),
+        "qr-code.png": (
+            "Scan qr-code.png to check its destination before sharing or printing."
+        ),
+        "email-sequence.txt": (
+            "Edit email-sequence.txt, then copy it into your email tool."
+        ),
+        "email-drafts.txt": "Edit email-drafts.txt, then copy it into your email tool.",
+        "social-posts.txt": (
+            "Review social-posts.txt, then schedule the posts on your channels."
+        ),
+        "landing-page-copy.txt": (
+            "Review landing-page-copy.txt, then copy it into your page editor."
+        ),
+        "project-plan.csv": (
+            "Open project-plan.csv in a spreadsheet and assign owners and dates."
+        ),
+    }
+    steps.extend(actions[path.name] for path in output_paths if path.name in actions)
+    return steps
+
+
 def write_packet_index(
     run_dir: Path,
     output_paths: list[Path],
@@ -84,17 +117,15 @@ def write_packet_index(
             f"{quality_issue_count} issue(s) found."
         )
     else:
-        lines.append("- quality-check.md passed with no publish-blocking issues.")
+        lines.append(
+            "- Automated checks found no issues. Review the files before publishing."
+        )
 
-    lines.extend(
-        [
-            "",
-            "## Next Steps",
-            "",
-            "- Confirm dates, links, prices, claims, and names before publishing.",
-            "- Test the campaign URL and QR code when those assets are generated.",
-        ]
-    )
+    lines.extend(["", "## Next Steps", ""])
+    for number, step in enumerate(
+        result_next_steps(output_paths, quality_issue_count), 1
+    ):
+        lines.append(f"{number}. {step}")
 
     path = run_dir / "packet-index.md"
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

@@ -1,5 +1,7 @@
 import unittest
+from contextlib import redirect_stdout
 from datetime import datetime
+from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
@@ -9,6 +11,48 @@ from haqs_toolkit.runs import create_run_dir, slugify
 
 
 class CreateFlowTests(unittest.TestCase):
+    def test_generation_reports_progress_and_relevant_next_steps(self):
+        brief = {"event_name": "Workshop", "registration_url": "https://haqs.test"}
+        output = StringIO()
+        with TemporaryDirectory() as directory, redirect_stdout(output):
+            run_dir = create.run_creation(
+                brief,
+                "event",
+                "selected",
+                [create.ASSET_TRACKED_URL],
+                runs_dir=Path(directory),
+            )
+            index = (run_dir / "packet-index.md").read_text(encoding="utf-8")
+        text = output.getvalue()
+        self.assertLess(text.index("Generating Tracked URL"), text.index("Checking"))
+        self.assertLess(text.index("Checking"), text.index("Created marketing run"))
+        self.assertIn("Test the links in campaign-url.txt", text)
+        self.assertIn("Test the links in campaign-url.txt", index)
+        self.assertNotIn("Scan qr-code.png", text + index)
+        self.assertNotIn("Fix the", text + index)
+
+    def test_generation_failure_shows_current_asset_without_success(self):
+        output = StringIO()
+        brief = {"event_name": "Workshop", "registration_url": "https://haqs.test"}
+        with TemporaryDirectory() as directory, redirect_stdout(output):
+            with (
+                patch(
+                    "haqs_toolkit.create.qr_code_generator.create_qr_code",
+                    side_effect=OSError("Cannot save QR code"),
+                ),
+                self.assertRaises(OSError),
+            ):
+                create.run_creation(
+                    brief,
+                    "event",
+                    "selected",
+                    [create.ASSET_QR_CODE],
+                    runs_dir=Path(directory),
+                )
+        self.assertIn("Generating QR code...", output.getvalue())
+        self.assertNotIn("Created marketing run", output.getvalue())
+        self.assertNotIn("Next steps:", output.getvalue())
+
     def test_slugify_makes_readable_folder_parts(self):
         self.assertEqual(slugify("Spring Workshop!"), "spring-workshop")
 
@@ -83,6 +127,8 @@ class CreateFlowTests(unittest.TestCase):
 
             quality_report = (run_dir / "quality-check.md").read_text(encoding="utf-8")
             self.assertIn("example.com", quality_report)
+            index = (run_dir / "packet-index.md").read_text(encoding="utf-8")
+            self.assertLess(index.index("Fix the"), index.index("Confirm dates"))
 
     @patch("haqs_toolkit.create.open_output_folder")
     def test_cancel_preview_does_not_create_a_run(self, opener):

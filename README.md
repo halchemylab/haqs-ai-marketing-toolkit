@@ -72,8 +72,11 @@ runs/<job-slug>-<job-type>-<scope>-YYYY-MM-DD-HHMM/
   quality-check.md
 ```
 
-After generation, `haqs-create` automatically opens that run's `outputs/` folder
-so the generated files are easy to find.
+During generation, `haqs-create` shows the current asset and when quality checks
+start. After generation, it lists saved files and next steps for the assets you
+created, with quality issues to fix first. These steps are also saved in
+`packet-index.md`. The run's `outputs/` folder opens automatically so the files
+are easy to find.
 
 Examples:
 

@@ -16,6 +16,7 @@ from haqs_toolkit.generators import (
 from haqs_toolkit.runs import (
     create_run_dir,
     open_output_folder,
+    result_next_steps,
     write_packet_index,
     write_quality_check,
 )
@@ -105,6 +106,7 @@ def write_event_run_assets(
     output_dir: Path,
     selected_assets: list[str],
 ) -> list[Path]:
+    print("Preparing summary and tracking links...", flush=True)
     brand_voice = load_brand_voice()
     tracking_urls = events.event_tracking_urls(brief)
     paths = [
@@ -120,6 +122,7 @@ def write_event_run_assets(
     ]
 
     if ASSET_TRACKED_URL in selected_assets:
+        print(f"Generating {ASSET_LABELS[ASSET_TRACKED_URL]}...", flush=True)
         paths.append(
             write_text(
                 output_dir / "campaign-url.txt",
@@ -127,10 +130,12 @@ def write_event_run_assets(
             )
         )
     if ASSET_QR_CODE in selected_assets:
+        print(f"Generating {ASSET_LABELS[ASSET_QR_CODE]}...", flush=True)
         qr_path = output_dir / "qr-code.png"
         qr_code_generator.create_qr_code(tracking_urls["qr_code"]).save(qr_path)
         paths.append(record_saved(qr_path))
     if ASSET_EMAIL in selected_assets:
+        print(f"Generating {ASSET_LABELS[ASSET_EMAIL]}...", flush=True)
         paths.append(
             write_text(
                 output_dir / "email-sequence.txt",
@@ -138,6 +143,7 @@ def write_event_run_assets(
             )
         )
     if ASSET_SOCIAL in selected_assets:
+        print(f"Generating {ASSET_LABELS[ASSET_SOCIAL]}...", flush=True)
         paths.append(
             write_text(
                 output_dir / "social-posts.txt",
@@ -145,6 +151,7 @@ def write_event_run_assets(
             )
         )
     if ASSET_LANDING_PAGE in selected_assets:
+        print(f"Generating {ASSET_LABELS[ASSET_LANDING_PAGE]}...", flush=True)
         paths.append(
             write_text(
                 output_dir / "landing-page-copy.txt",
@@ -159,6 +166,7 @@ def write_campaign_run_assets(
     output_dir: Path,
     selected_assets: list[str],
 ) -> list[Path]:
+    print("Preparing summary and tracking links...", flush=True)
     brand_voice = load_brand_voice()
     source_material = campaigns.campaign_source_material(
         brief, str(brief.get("source_material", ""))
@@ -178,6 +186,7 @@ def write_campaign_run_assets(
     ]
 
     if ASSET_TRACKED_URL in selected_assets:
+        print(f"Generating {ASSET_LABELS[ASSET_TRACKED_URL]}...", flush=True)
         paths.append(
             write_text(
                 output_dir / "campaign-url.txt",
@@ -185,10 +194,12 @@ def write_campaign_run_assets(
             )
         )
     if ASSET_QR_CODE in selected_assets:
+        print(f"Generating {ASSET_LABELS[ASSET_QR_CODE]}...", flush=True)
         qr_path = output_dir / "qr-code.png"
         qr_code_generator.create_qr_code(tracking_urls["qr_code"]).save(qr_path)
         paths.append(record_saved(qr_path))
     if ASSET_EMAIL in selected_assets:
+        print(f"Generating {ASSET_LABELS[ASSET_EMAIL]}...", flush=True)
         email_copy = campaigns.ai_or_fallback(
             system_prompt="You are a precise marketing email copywriter.",
             user_prompt=email_generator.build_prompt(
@@ -200,6 +211,7 @@ def write_campaign_run_assets(
         ).replace("[url here]", tracking_urls["email"])
         paths.append(write_text(output_dir / "email-drafts.txt", email_copy))
     if ASSET_SOCIAL in selected_assets:
+        print(f"Generating {ASSET_LABELS[ASSET_SOCIAL]}...", flush=True)
         social_copy = campaigns.ai_or_fallback(
             system_prompt=(
                 "You are a precise marketing strategist and content "
@@ -214,6 +226,7 @@ def write_campaign_run_assets(
         )
         paths.append(write_text(output_dir / "social-posts.txt", social_copy))
     if ASSET_LANDING_PAGE in selected_assets:
+        print(f"Generating {ASSET_LABELS[ASSET_LANDING_PAGE]}...", flush=True)
         landing_copy = campaigns.ai_or_fallback(
             system_prompt="You are a precise conversion copywriter for landing pages.",
             user_prompt=landing_page_copy_generator.build_prompt(
@@ -241,9 +254,12 @@ def write_campaign_run_assets(
         ).replace("[url here]", tracking_urls["landing_page"])
         paths.append(write_text(output_dir / "landing-page-copy.txt", landing_copy))
     if ASSET_PROJECT_PLAN in selected_assets:
+        print("Generating Project plan...", flush=True)
         project_plan_path = campaigns.write_project_plan(brief, output_dir)
         if project_plan_path:
             paths.append(project_plan_path)
+        else:
+            print("Skipped project plan: add a launch date to generate it.", flush=True)
     return paths
 
 
@@ -255,6 +271,7 @@ def run_creation(
     *,
     runs_dir: Path = Path("runs"),
 ) -> Path:
+    print("Starting generation...", flush=True)
     job_name_key = "event_name" if job_type == JOB_EVENT else "campaign_name"
     run_dir = create_run_dir(
         str(brief[job_name_key]),
@@ -270,6 +287,7 @@ def run_creation(
     else:
         output_paths = write_campaign_run_assets(brief, output_dir, selected_assets)
 
+    print("Checking generated files...", flush=True)
     quality_path, issues = write_quality_check(run_dir)
     index_path = write_packet_index(run_dir, output_paths, len(issues))
 
@@ -280,6 +298,9 @@ def run_creation(
     print(f"Quality check: {quality_path}")
     print(f"Packet index: {index_path}")
     print(f"Quality issues found: {len(issues)}")
+    print("Next steps:")
+    for number, step in enumerate(result_next_steps(output_paths, len(issues)), 1):
+        print(f"{number}. {step}")
     return run_dir
 
 
