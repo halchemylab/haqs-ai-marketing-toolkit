@@ -85,7 +85,10 @@ def ensure_event_packet_dirs(event_dir: Path) -> None:
 
 
 def load_event_brief(
-    path: Path, *, required_fields: list[str] | None = None
+    path: Path,
+    *,
+    required_fields: list[str] | None = None,
+    defaults: dict[str, object] | None = None,
 ) -> dict[str, object]:
     if not path.exists():
         raise EventBriefError(
@@ -108,6 +111,9 @@ def load_event_brief(
     if not isinstance(brief, dict):
         raise EventBriefError("brief.json must contain a JSON object.")
 
+    from haqs_toolkit.clients import apply_defaults
+
+    brief = apply_defaults(brief, defaults or {})
     try:
         validate_event_brief(brief, required_fields=required_fields)
     except EventBriefError as exc:

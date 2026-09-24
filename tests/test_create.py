@@ -135,7 +135,16 @@ class CreateFlowTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             with patch(
                 "builtins.input",
-                side_effect=["2", "1", "1", "2", "Workshop", "https://haqs.test", "q"],
+                side_effect=[
+                    "2",
+                    "1",
+                    "1",
+                    "1",
+                    "2",
+                    "Workshop",
+                    "https://haqs.test",
+                    "q",
+                ],
             ):
                 self.assertEqual(create.main(["--runs-dir", directory]), 0)
             self.assertEqual(list(Path(directory).iterdir()), [])
@@ -143,7 +152,7 @@ class CreateFlowTests(unittest.TestCase):
 
     @patch("haqs_toolkit.create.open_output_folder")
     def test_interactive_url_only_asks_for_name_and_url_after_assets(self, opener):
-        answers = ["2", "1", "1", "2", "Workshop", "https://haqs.test/join", ""]
+        answers = ["2", "1", "1", "1", "2", "Workshop", "https://haqs.test/join", ""]
         with TemporaryDirectory() as directory:
             with patch("builtins.input", side_effect=answers) as prompt:
                 code = create.main(["--runs-dir", directory])

@@ -152,6 +152,27 @@ the voice you want to use. Every AI copy script loads it automatically. The
 individual scripts can still use local asset tone, such as email tone, social
 channel style, or landing page tone.
 
+## Client Profiles
+
+Keep one editable text file per client in `clients/`, such as `clients/default.txt`.
+See [the profile template](clients/README.md) for fields and examples. When client
+files exist, interactive `haqs-create` offers a numbered picker, including
+General brand voice for the existing `brand_voice.txt`.
+
+For saved briefs, choose a client explicitly:
+
+```powershell
+haqs-create --scope complete --job-type campaign --brief brief.json --client default
+```
+
+Audience, CTA, and channels fill missing brief values. Campaign-specific values
+win; review and edit defaults in the brief preview. Every client run saves
+`client-profile.txt` and embeds the profile in `brief.json` so later edits to the
+client file do not affect past runs. Reusing a saved brief retains that snapshot;
+`--client default` refreshes it, and `--client general` uses the global brand voice.
+Client instructions guide AI campaign and event copy. Template fallbacks still
+need review when AI is unavailable.
+
 ## Setup
 
 Install dependencies:

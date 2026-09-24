@@ -120,7 +120,12 @@ def validate_field(field: str, value: object) -> None:
         validate_url(str(value))
 
 
-def collect_brief(job_type: str, assets: list[str] | None = None) -> dict[str, object]:
+def collect_brief(
+    job_type: str,
+    assets: list[str] | None = None,
+    *,
+    defaults: dict[str, object] | None = None,
+) -> dict[str, object]:
     method = choose_option(
         "What do you need? Start with existing details or a guided brief.",
         ["Paste event description / campaign brief", "Answer guided questions"],
@@ -136,6 +141,9 @@ def collect_brief(job_type: str, assets: list[str] | None = None) -> dict[str, o
                 break
             lines.append(line)
         brief = parse_details("\n".join(lines), job_type)
+    from haqs_toolkit.clients import apply_defaults
+
+    brief = apply_defaults(brief, defaults or {})
     required = required_for(job_type, assets)
     for field in fields_for(job_type, assets):
         if brief.get(field):

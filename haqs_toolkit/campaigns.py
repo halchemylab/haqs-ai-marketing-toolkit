@@ -81,7 +81,10 @@ def ensure_campaign_packet_dirs(campaign_dir: Path) -> None:
 
 
 def load_campaign_brief(
-    path: Path, *, required_fields: list[str] | None = None
+    path: Path,
+    *,
+    required_fields: list[str] | None = None,
+    defaults: dict[str, object] | None = None,
 ) -> dict[str, object]:
     if not path.exists():
         raise CampaignBriefError(
@@ -104,6 +107,9 @@ def load_campaign_brief(
     if not isinstance(brief, dict):
         raise CampaignBriefError("brief.json must contain a JSON object.")
 
+    from haqs_toolkit.clients import apply_defaults
+
+    brief = apply_defaults(brief, defaults or {})
     try:
         validate_campaign_brief(brief, required_fields=required_fields)
     except CampaignBriefError as exc:

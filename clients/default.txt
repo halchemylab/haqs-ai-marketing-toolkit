@@ -1,0 +1,11 @@
+Client: Default
+Voice: Clear, practical, professional, and direct.
+Audience:
+Products/services:
+Preferred CTA:
+Website:
+Channels:
+Avoid: Hype, jargon, exaggerated promises, unsupported claims, fake urgency, and excessive emojis.
+
+Use the audience, offer, CTA, and channels supplied in the campaign brief.
+Use short paragraphs, make the next step obvious, and stay grounded in the supplied material.

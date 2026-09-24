@@ -110,6 +110,16 @@ def write_packet_index(
             display_path = path
         lines.append(f"- [{path.name}]({display_path.as_posix()})")
 
+    if (run_dir / "client-profile.txt").is_file():
+        lines.extend(
+            [
+                "",
+                "## Client Profile",
+                "",
+                "[Saved client instructions](client-profile.txt)",
+            ]
+        )
+
     lines.extend(["", "## Quality Check", ""])
     if quality_issue_count:
         lines.append(

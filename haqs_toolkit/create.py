@@ -6,7 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
-from haqs_toolkit import campaigns, events, intake
+from haqs_toolkit import campaigns, clients, events, intake
 from haqs_toolkit.errors import command_errors, record_saved, report_error
 from haqs_toolkit.generators import (
     email_generator,
@@ -22,7 +22,6 @@ from haqs_toolkit.runs import (
 )
 from haqs_toolkit.utils.marketing import (
     choose_option,
-    load_brand_voice,
 )
 
 SCOPE_COMPLETE = "complete"
@@ -101,13 +100,30 @@ def write_text(path: Path, content: str) -> Path:
     return record_saved(path)
 
 
+def event_profile_copy(brief: dict[str, object], brand_voice: str, draft: str) -> str:
+    if not brief.get("client_profile"):
+        return draft
+    return campaigns.ai_or_fallback(
+        system_prompt="You are a precise event marketing copywriter.",
+        user_prompt=(
+            f"{brand_voice}\n\nEvent brief:\n{events.brief_text(brief)}\n\n"
+            f"Draft structure and tracking links:\n{draft}\n\n"
+            "Write copy for this event using the client voice. "
+            "Keep the draft's asset structure and exact tracking links. "
+            "Replace template-specific claims with facts from the brief. "
+            "Do not invent facts or claims."
+        ),
+        fallback=draft,
+    )
+
+
 def write_event_run_assets(
     brief: dict[str, object],
     output_dir: Path,
     selected_assets: list[str],
 ) -> list[Path]:
     print("Preparing summary and tracking links...", flush=True)
-    brand_voice = load_brand_voice()
+    brand_voice = clients.voice_for(brief)
     tracking_urls = events.event_tracking_urls(brief)
     paths = [
         write_text(
@@ -139,7 +155,11 @@ def write_event_run_assets(
         paths.append(
             write_text(
                 output_dir / "email-sequence.txt",
-                events.event_email_sequence(brief, tracking_urls["email"]),
+                event_profile_copy(
+                    brief,
+                    brand_voice,
+                    events.event_email_sequence(brief, tracking_urls["email"]),
+                ),
             )
         )
     if ASSET_SOCIAL in selected_assets:
@@ -147,7 +167,9 @@ def write_event_run_assets(
         paths.append(
             write_text(
                 output_dir / "social-posts.txt",
-                events.event_social_posts(brief, tracking_urls),
+                event_profile_copy(
+                    brief, brand_voice, events.event_social_posts(brief, tracking_urls)
+                ),
             )
         )
     if ASSET_LANDING_PAGE in selected_assets:
@@ -155,7 +177,13 @@ def write_event_run_assets(
         paths.append(
             write_text(
                 output_dir / "landing-page-copy.txt",
-                events.event_landing_page_copy(brief, tracking_urls["landing_page"]),
+                event_profile_copy(
+                    brief,
+                    brand_voice,
+                    events.event_landing_page_copy(
+                        brief, tracking_urls["landing_page"]
+                    ),
+                ),
             )
         )
     return paths
@@ -167,7 +195,7 @@ def write_campaign_run_assets(
     selected_assets: list[str],
 ) -> list[Path]:
     print("Preparing summary and tracking links...", flush=True)
-    brand_voice = load_brand_voice()
+    brand_voice = clients.voice_for(brief)
     source_material = campaigns.campaign_source_material(
         brief, str(brief.get("source_material", ""))
     )
@@ -271,6 +299,7 @@ def run_creation(
     *,
     runs_dir: Path = Path("runs"),
 ) -> Path:
+    clients.voice_for(brief)  # Validate saved profile before creating files.
     print("Starting generation...", flush=True)
     job_name_key = "event_name" if job_type == JOB_EVENT else "campaign_name"
     run_dir = create_run_dir(
@@ -281,6 +310,8 @@ def run_creation(
     )
     output_dir = run_dir / "outputs"
     write_json(run_dir / "brief.json", brief)
+    if brief.get("client_profile"):
+        write_text(run_dir / "client-profile.txt", str(brief["client_profile"]["text"]))
 
     if job_type == JOB_EVENT:
         output_paths = write_event_run_assets(brief, output_dir, selected_assets)
@@ -305,9 +336,12 @@ def run_creation(
 
 
 def brief_from_inputs(
-    job_type: str, assets: list[str] | None = None
+    job_type: str,
+    assets: list[str] | None = None,
+    *,
+    defaults: dict[str, object] | None = None,
 ) -> dict[str, object]:
-    return intake.collect_brief(job_type, assets)
+    return intake.collect_brief(job_type, assets, defaults=defaults)
 
 
 def choose_assets(job_type: str) -> list[str]:
@@ -335,20 +369,30 @@ def choose_assets(job_type: str) -> list[str]:
 
 
 def load_brief(
-    path: Path, job_type: str, assets: list[str] | None = None
+    path: Path,
+    job_type: str,
+    assets: list[str] | None = None,
+    *,
+    defaults: dict[str, object] | None = None,
 ) -> dict[str, object]:
     if job_type == JOB_EVENT:
         return events.load_event_brief(
-            path, required_fields=intake.required_for(job_type, assets)
+            path,
+            required_fields=intake.required_for(job_type, assets),
+            defaults=defaults,
         )
     return campaigns.load_campaign_brief(
-        path, required_fields=intake.required_for(job_type, assets)
+        path, required_fields=intake.required_for(job_type, assets), defaults=defaults
     )
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Create marketing assets in one self-contained run folder."
+    )
+    parser.add_argument(
+        "--client",
+        help="Client filename or stem from clients/, or general for brand_voice.txt.",
     )
     parser.add_argument("--scope", choices=[SCOPE_COMPLETE, SCOPE_SELECTED])
     parser.add_argument("--job-type", choices=[JOB_EVENT, JOB_CAMPAIGN])
@@ -401,15 +445,29 @@ def main(argv: list[str] | None = None) -> int:
     if scope == SCOPE_SELECTED and not args.assets:
         selected_assets = choose_assets(job_type)
 
+    profile = None
+    if args.client and args.client != "general":
+        profile = clients.load_profile(args.client)
+    elif not args.client and not args.brief:
+        profile = clients.choose_profile()
+    defaults = clients.profile_defaults(profile)
+
     intake_assets = selected_assets if scope == SCOPE_SELECTED else None
     if args.brief:
         try:
-            brief = load_brief(args.brief, job_type, intake_assets)
+            brief = load_brief(args.brief, job_type, intake_assets, defaults=defaults)
         except (campaigns.CampaignBriefError, events.EventBriefError) as exc:
             report_error(exc)
             return 1
     else:
-        brief = brief_from_inputs(job_type, intake_assets)
+        brief = brief_from_inputs(job_type, intake_assets, defaults=defaults)
+    if args.client == "general":
+        brief.pop("client_profile", None)
+    elif profile:
+        brief["client_profile"] = profile
+    clients.voice_for(brief)
+    if brief.get("client_profile"):
+        print(f"Client profile: {brief['client_profile'].get('name', 'saved profile')}")
     if not args.brief or args.review:
         if not intake.review_brief(brief, job_type, intake_assets):
             print("Generation cancelled. No run was created.")
