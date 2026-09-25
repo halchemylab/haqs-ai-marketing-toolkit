@@ -24,11 +24,11 @@ Website is background only: supply the actual campaign destination during intake
 Explicit brief values override client defaults; use the brief preview to edit them.
 
 `haqs-create` offers a numbered picker when profiles exist. Choose General brand
-voice to use `brand_voice.txt`. For saved briefs, pass `--client default` or
-`--client default.txt`; `--client general` removes a saved profile. Without that flag,
+voice to use `brand_voice.txt`. For saved briefs, pass `--brands default` or
+`--brands default.txt`; `--brands general` removes a saved profile. Without that flag,
 saved briefs reuse their embedded profile without prompting.
 
 Each client run saves the profile in `brief.json` and `client-profile.txt`.
-Changing the client file later does not change past runs. Pass `--client default`
+Changing the client file later does not change past runs. Pass `--brands default`
 again to use its latest contents. Event copy uses AI when a client is selected;
 if AI is unavailable, the normal template fallback is flagged for review.

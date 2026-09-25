@@ -5,18 +5,18 @@ from pathlib import Path
 from haqs_toolkit.errors import UserError
 from haqs_toolkit.utils.marketing import REPO_ROOT, choose_option, load_brand_voice
 
-CLIENTS_DIR = REPO_ROOT / "clients"
+CLIENTS_DIR = REPO_ROOT / "brands"
 
 
 def load_profile(name: str, directory: Path = CLIENTS_DIR) -> dict[str, str]:
     filename = name if name.endswith(".txt") else name + ".txt"
     if Path(filename).name != filename or "/" in filename or "\\" in filename:
-        raise UserError("Use a client filename from the clients folder.")
+        raise UserError("Use a client filename from the brands folder.")
     path = directory / filename
     if not path.is_file():
         raise UserError(
             f"Client profile not found: {path}",
-            "Add a .txt file to clients/ or choose --client general.",
+            "Add a .txt file to brands/ or choose --brands general.",
         )
     text = path.read_text(encoding="utf-8-sig").strip()
     if not text:
@@ -79,7 +79,7 @@ def voice_for(brief: dict[str, object]) -> str:
     ):
         raise UserError(
             "Invalid client_profile in brief.",
-            "Use --client to select a valid client text file.",
+            "Use --brands to select a valid client text file.",
         )
     return (
         "Client profile (defaults and background):\n"

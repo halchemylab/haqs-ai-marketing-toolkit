@@ -391,8 +391,8 @@ def build_parser() -> argparse.ArgumentParser:
         description="Create marketing assets in one self-contained run folder."
     )
     parser.add_argument(
-        "--client",
-        help="Client filename or stem from clients/, or general for brand_voice.txt.",
+        "--brands",
+        help="Brand filename or stem from brands/, or general for brand_voice.txt.",
     )
     parser.add_argument("--scope", choices=[SCOPE_COMPLETE, SCOPE_SELECTED])
     parser.add_argument("--job-type", choices=[JOB_EVENT, JOB_CAMPAIGN])
@@ -446,9 +446,9 @@ def main(argv: list[str] | None = None) -> int:
         selected_assets = choose_assets(job_type)
 
     profile = None
-    if args.client and args.client != "general":
-        profile = clients.load_profile(args.client)
-    elif not args.client and not args.brief:
+    if args.brands and args.brands != "general":
+        profile = clients.load_profile(args.brands)
+    elif not args.brands and not args.brief:
         profile = clients.choose_profile()
     defaults = clients.profile_defaults(profile)
 
@@ -461,7 +461,7 @@ def main(argv: list[str] | None = None) -> int:
             return 1
     else:
         brief = brief_from_inputs(job_type, intake_assets, defaults=defaults)
-    if args.client == "general":
+    if args.brands == "general":
         brief.pop("client_profile", None)
     elif profile:
         brief["client_profile"] = profile

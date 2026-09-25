@@ -151,7 +151,11 @@ class ClientTests(unittest.TestCase):
                 "--brief",
                 str(path),
             ]
-            for flag, expected in [(None, old), ("new", new), ("general", None)]:
+            for option, flag, expected in [
+                ("--brands", None, old),
+                ("--brands", "new", new),
+                ("--brands", "general", None),
+            ]:
                 with (
                     patch("haqs_toolkit.clients.load_profile", return_value=new),
                     patch(
@@ -164,7 +168,7 @@ class ClientTests(unittest.TestCase):
                     ),
                 ):
                     self.assertEqual(
-                        create.main(base + (["--client", flag] if flag else [])), 0
+                        create.main(base + ([option, flag] if flag else [])), 0
                     )
                     self.assertEqual(
                         run.call_args.kwargs["brief"].get("client_profile"), expected
