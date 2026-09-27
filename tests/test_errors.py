@@ -178,9 +178,10 @@ class AiErrorTests(unittest.TestCase):
         ]:
             self.assertIn("retry", str(marketing.ai_request_error(exc)))
 
-    def test_missing_key_and_dotenv_precedence(self):
+    def test_openai_client_uses_environment_key_only(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
+            (root / ".env").write_text("OPENAI_API_KEY=file-key\n", encoding="utf-8")
             with (
                 patch.object(marketing, "REPO_ROOT", root),
                 patch.dict(os.environ, {}, clear=True),
@@ -189,15 +190,10 @@ class AiErrorTests(unittest.TestCase):
                     marketing.AiGenerationError, "OPENAI_API_KEY is missing"
                 ):
                     marketing.get_openai_client()
-                (root / ".env").write_text(
-                    "OPENAI_API_KEY=file-key\n", encoding="utf-8"
-                )
+                os.environ["OPENAI_API_KEY"] = "terminal-key"
                 with patch("openai.OpenAI") as client:
                     marketing.get_openai_client()
                     client.assert_called_once()
-                    self.assertEqual(os.environ["OPENAI_API_KEY"], "file-key")
-                    os.environ["OPENAI_API_KEY"] = "terminal-key"
-                    marketing.get_openai_client()
                     self.assertEqual(os.environ["OPENAI_API_KEY"], "terminal-key")
 
     def test_fallback_warns_without_polluting_copy(self):

@@ -307,14 +307,11 @@ def combine_roi_results(results: list[RoiResult]) -> RoiResult:
 
 
 def get_openai_client():
-    from dotenv import load_dotenv
-
-    load_dotenv(REPO_ROOT / ".env", override=False)
     if not os.getenv("OPENAI_API_KEY", "").strip():
         raise AiGenerationError(
             "OPENAI_API_KEY is missing.",
             'In PowerShell, run $env:OPENAI_API_KEY="your-api-key-here", '
-            f"or set OPENAI_API_KEY in {REPO_ROOT / '.env'}. Then run the tool again.",
+            "then run the tool again.",
         )
     from openai import OpenAI
 

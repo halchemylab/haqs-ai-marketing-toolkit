@@ -187,11 +187,7 @@ Set your OpenAI API key for the current PowerShell session:
 $env:OPENAI_API_KEY="your-api-key-here"
 ```
 
-Or copy `.env.example` to `.env` in the toolkit folder and fill in `OPENAI_API_KEY`.
-AI tools load this file automatically before making a request. Existing terminal
-environment variables take precedence.
-The toolkit does not automatically load `.env`; Codex or the terminal session
-must expose those variables before running AI-powered scripts.
+The terminal session must expose `OPENAI_API_KEY` before running AI-powered scripts.
 
 By default, the AI scripts use `gpt-4.1-mini`. To use a different model for
 the current PowerShell session:
