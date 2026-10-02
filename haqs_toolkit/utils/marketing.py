@@ -9,7 +9,11 @@ from pathlib import Path
 from typing import TypedDict
 from urllib.parse import urlparse
 
+from dotenv import load_dotenv
+
 from haqs_toolkit.errors import UserError, record_saved
+
+load_dotenv(Path.cwd() / ".env", override=False)
 
 DEFAULT_OUTPUT_DIR = "output"
 OUTPUT_DIR = Path(os.getenv("HAQS_OUTPUT_DIR", DEFAULT_OUTPUT_DIR))
@@ -17,7 +21,8 @@ ROI_LOG_PATH = OUTPUT_DIR / "roi" / "automation_roi.csv"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BRAND_VOICE_PATH = REPO_ROOT / "brand_voice.txt"
 DEFAULT_HOURLY_RATE = 50.0
-DEFAULT_OPENAI_MODEL = "gpt-4.1-mini"
+DEFAULT_OPENAI_MODEL = "gpt-6-luna"
+DEFAULT_OPENAI_REASONING_EFFORT = "low"
 DEFAULT_BRAND_VOICE = """
 Clear, practical, professional, and direct.
 
@@ -310,8 +315,8 @@ def get_openai_client():
     if not os.getenv("OPENAI_API_KEY", "").strip():
         raise AiGenerationError(
             "OPENAI_API_KEY is missing.",
-            'In PowerShell, run $env:OPENAI_API_KEY="your-api-key-here", '
-            "then run the tool again.",
+            "Add OPENAI_API_KEY to .env in the current directory or set it "
+            "in PowerShell, then run the tool again.",
         )
     from openai import OpenAI
 
@@ -333,6 +338,11 @@ def generate_text(
                 {"role": "user", "content": user_prompt},
             ],
         }
+        effort = os.getenv("OPENAI_REASONING_EFFORT", "").strip()
+        if effort or request["model"] == DEFAULT_OPENAI_MODEL:
+            request["reasoning"] = {
+                "effort": effort or DEFAULT_OPENAI_REASONING_EFFORT
+            }
         if text_format:
             request["text"] = {"format": text_format}
 

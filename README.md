@@ -181,20 +181,30 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Set your OpenAI API key for the current PowerShell session:
+Copy the example settings and add your OpenAI API key to `.env`:
 
 ```powershell
-$env:OPENAI_API_KEY="your-api-key-here"
+Copy-Item .env.example .env
+# Edit .env and replace your-api-key-here with your key.
 ```
 
-The terminal session must expose `OPENAI_API_KEY` before running AI-powered scripts.
+The toolkit loads `.env` from the current working directory when it starts.
+Run commands from this repository folder to use that file. Existing PowerShell
+environment variables take precedence over `.env` values. `.env` is ignored by
+Git; never put a real API key in `.env.example`.
 
-By default, the AI scripts use `gpt-4.1-mini`. To use a different model for
-the current PowerShell session:
+By default, the AI scripts use `gpt-6-luna` with low reasoning effort. Change
+`OPENAI_MODEL` or `OPENAI_REASONING_EFFORT` in `.env` to customize them. You can
+also override either setting for the current PowerShell session:
 
 ```powershell
-$env:OPENAI_MODEL="gpt-4.1"
+$env:OPENAI_MODEL="gpt-6-luna"
+$env:OPENAI_REASONING_EFFORT="medium"
 ```
+
+When selecting a model that does not support reasoning effort, remove
+`OPENAI_REASONING_EFFORT` from `.env` and the PowerShell session. The low
+default applies automatically only when `gpt-6-luna` is selected.
 
 The ROI tracker uses `$50/hour` by default. To override it for the current
 PowerShell session:

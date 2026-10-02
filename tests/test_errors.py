@@ -178,23 +178,37 @@ class AiErrorTests(unittest.TestCase):
         ]:
             self.assertIn("retry", str(marketing.ai_request_error(exc)))
 
-    def test_openai_client_uses_environment_key_only(self):
+    def test_dotenv_loads_key_and_preserves_existing_environment(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
-            (root / ".env").write_text("OPENAI_API_KEY=file-key\n", encoding="utf-8")
-            with (
-                patch.object(marketing, "REPO_ROOT", root),
-                patch.dict(os.environ, {}, clear=True),
-            ):
-                with self.assertRaisesRegex(
-                    marketing.AiGenerationError, "OPENAI_API_KEY is missing"
-                ):
-                    marketing.get_openai_client()
-                os.environ["OPENAI_API_KEY"] = "terminal-key"
-                with patch("openai.OpenAI") as client:
-                    marketing.get_openai_client()
-                    client.assert_called_once()
-                    self.assertEqual(os.environ["OPENAI_API_KEY"], "terminal-key")
+            (root / ".env").write_text(
+                "OPENAI_API_KEY=file-key\nOPENAI_MODEL=gpt-6-luna\n",
+                encoding="utf-8",
+            )
+            code = (
+                "import os; from haqs_toolkit.utils import marketing; "
+                "print(os.environ['OPENAI_API_KEY']); "
+                "print(marketing.get_openai_model())"
+            )
+            cases = ((None, "file-key"), ("terminal-key", "terminal-key"))
+            for existing_key, expected_key in cases:
+                env = os.environ.copy()
+                env.pop("OPENAI_API_KEY", None)
+                env.pop("OPENAI_MODEL", None)
+                env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1])
+                if existing_key:
+                    env["OPENAI_API_KEY"] = existing_key
+                result = subprocess.run(
+                    [sys.executable, "-c", code],
+                    cwd=root,
+                    env=env,
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+                self.assertEqual(
+                    result.stdout.splitlines(), [expected_key, "gpt-6-luna"]
+                )
 
     def test_fallback_warns_without_polluting_copy(self):
         error = marketing.AiGenerationError("No key", "Set OPENAI_API_KEY")

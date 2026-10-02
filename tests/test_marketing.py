@@ -127,6 +127,28 @@ class BrandVoiceTests(unittest.TestCase):
 
 
 class MarketingAiGenerationTests(unittest.TestCase):
+    def test_generate_text_uses_luna_with_low_reasoning_by_default(self):
+        requests = []
+
+        class FakeResponses:
+            def create(self, **kwargs):
+                requests.append(kwargs)
+                return type("FakeResponse", (), {"output_text": "Draft"})()
+
+        class FakeClient:
+            responses = FakeResponses()
+
+        with (
+            patch.object(marketing, "get_openai_client", return_value=FakeClient()),
+            patch.dict(os.environ, {"OPENAI_MODEL": "gpt-6-luna"}, clear=False),
+            patch.dict(os.environ, {"OPENAI_REASONING_EFFORT": ""}),
+        ):
+            self.assertEqual(marketing.generate_text("system", "user"), "Draft")
+            self.assertEqual(requests[-1]["reasoning"], {"effort": "low"})
+            self.assertEqual(requests[-1]["model"], "gpt-6-luna")
+            marketing.generate_text("system", "user", model="gpt-4.1-mini")
+            self.assertNotIn("reasoning", requests[-1])
+
     def test_generate_text_requires_openai_api_key(self):
         with patch.dict(os.environ, {}, clear=True):
             with self.assertRaisesRegex(marketing.AiGenerationError, "OPENAI_API_KEY"):
