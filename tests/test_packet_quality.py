@@ -94,6 +94,82 @@ class PacketQualityTests(unittest.TestCase):
 
         self.assertEqual(exit_code, 0)
 
+    def test_scan_file_flags_long_email_subject_line(self):
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "email.txt"
+            long_subject = "Subject: " + "A" * 65 + "\n"
+            valid_subject = "Subject: A concise and punchy subject line\n"
+            path.write_text(long_subject + "\n" + valid_subject, encoding="utf-8")
+
+            issues = packet_quality.scan_file(path)
+
+        subject_issues = [i for i in issues if i.code == "subject-line-length"]
+        self.assertEqual(len(subject_issues), 1)
+        self.assertEqual(subject_issues[0].line_number, 1)
+        self.assertIn("exceeds 60 characters", subject_issues[0].message)
+
+    def test_scan_file_flags_long_x_post_under_heading(self):
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "social-posts.txt"
+            long_post = "x" * 285
+            content = f"## X Post 1\n\n{long_post}\n\n## LinkedIn Post 1\n\nValid post."
+            path.write_text(content, encoding="utf-8")
+
+            issues = packet_quality.scan_file(path)
+
+        x_issues = [i for i in issues if i.code == "character-limit"]
+        self.assertEqual(len(x_issues), 1)
+        self.assertIn("exceeds 280 characters", x_issues[0].message)
+
+    def test_scan_file_flags_long_x_post_in_x_file(self):
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "x_posts_2026.txt"
+            long_post = "1. " + "y" * 285
+            valid_post = "2. Short tweet under 280."
+            path.write_text(f"{long_post}\n{valid_post}\n", encoding="utf-8")
+
+            issues = packet_quality.scan_file(path)
+
+        x_issues = [i for i in issues if i.code == "character-limit"]
+        self.assertEqual(len(x_issues), 1)
+        self.assertEqual(x_issues[0].line_number, 1)
+
+    def test_scan_file_flags_template_leaks(self):
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "email.txt"
+            content = (
+                "Hello {audience},\n"
+                "Welcome to ${event_name} with {{speaker}}!\n"
+                "The score was NaN and status is null.\n"
+            )
+            path.write_text(content, encoding="utf-8")
+
+            issues = packet_quality.scan_file(path)
+
+        leak_issues = [i for i in issues if i.code == "template-leak"]
+        self.assertGreaterEqual(len(leak_issues), 3)
+        messages = " ".join(i.message for i in leak_issues)
+        self.assertIn("{audience}", messages)
+        self.assertIn("${event_name}", messages)
+        self.assertIn("NaN", messages)
+
+    def test_scan_file_flags_malformed_urls(self):
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "campaign-url.txt"
+            content = (
+                "[Link with space]"
+                "(https://haqs.com/register?utm_campaign=fall launch)\n"
+                "Visit https://haqs.com/register?utm_source=email&utm_medium=email&&\n"
+                "Visit https://haqs.com/register?utm_source=email&\n"
+                "Visit https://haqs.com/register?&=missingkey\n"
+            )
+            path.write_text(content, encoding="utf-8")
+
+            issues = packet_quality.scan_file(path)
+
+        url_issues = [i for i in issues if i.code == "malformed-url"]
+        self.assertGreaterEqual(len(url_issues), 4)
+
 
 if __name__ == "__main__":
     unittest.main()
