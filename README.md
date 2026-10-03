@@ -251,59 +251,16 @@ haqs-create --scope complete --job-type campaign --brief campaigns/fall-workshop
 
 Each run automatically writes `packet-index.md` and `quality-check.md`.
 
-Repurpose pasted source material into several marketing content formats:
-
-```powershell
-haqs-toolkit
-```
-
-Build a campaign URL with UTM parameters:
-
-```powershell
-haqs-toolkit
-```
-
-Generate three email options from pasted source content:
-
-```powershell
-haqs-toolkit
-```
-
-Generate a QR code PNG from a link:
-
-```powershell
-haqs-toolkit
-```
-
-Generate landing page copy from a guided mini-brief:
-
-```powershell
-haqs-toolkit
-```
-
-Build a marketing project plan CSV for spreadsheet editing or Asana import:
-
-```powershell
-haqs-toolkit
-```
-
-Turn raw customer feedback into short quotes, a case-study snippet, social
-proof, a website testimonial, and marketing callouts:
-
-```powershell
-haqs-toolkit
-```
+To use an individual generator, run `haqs-toolkit` and choose the matching
+option from its menu. The menu includes content repurposing, campaign URLs,
+email drafts, QR codes, landing page copy, project plans, testimonials, and ROI
+reports. For direct automation commands, see `COMMANDS.md`.
 
 The testimonial formatter asks whether the customer's identity may be shown.
 Choose the anonymous option to omit their name and company from generated copy.
 
-View automation ROI totals:
-
-```powershell
-haqs-toolkit
-```
-
-For multiline content prompts, paste the content and press Enter on a blank line when finished.
+For multiline content prompts, paste the content and press Enter on a blank line
+when finished.
 
 ## ROI Tracking
 
