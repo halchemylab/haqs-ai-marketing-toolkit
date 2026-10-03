@@ -175,11 +175,14 @@ need review when AI is unavailable.
 
 ## Setup
 
-Install dependencies:
+Install the toolkit and its dependencies:
 
 ```powershell
-pip install -r requirements.txt
+python -m pip install -e .
 ```
+
+`pyproject.toml` is the source of truth for dependencies. The legacy
+`requirements.txt` also installs the project for existing workflows.
 
 Copy the example settings and add your OpenAI API key to `.env`:
 
@@ -225,10 +228,9 @@ $env:HAQS_OUTPUT_DIR="custom-output"
 
 ## Commands
 
-The primary interface is the installed console commands:
+After installation, the primary interface is the console commands:
 
 ```powershell
-pip install -e .
 haqs-create
 ```
 
