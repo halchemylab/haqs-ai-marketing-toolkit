@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TypedDict
 from urllib.parse import urlparse
+from uuid import uuid4
 
 from dotenv import load_dotenv
 
@@ -191,7 +192,7 @@ def timestamped_output_path(
     output_dir.mkdir(parents=True, exist_ok=True)
     clean_extension = extension.lstrip(".")
     stamp = now.strftime("%Y-%m-%d_%H-%M-%S")
-    return output_dir / f"{prefix}_{stamp}.{clean_extension}"
+    return output_dir / f"{prefix}_{stamp}_{uuid4().hex}.{clean_extension}"
 
 
 def save_text(prefix: str, content: str) -> Path:

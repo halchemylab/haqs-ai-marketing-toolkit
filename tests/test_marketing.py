@@ -2,6 +2,7 @@ import csv
 import os
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -37,6 +38,20 @@ class MarketingRoiTests(unittest.TestCase):
 
         self.assertEqual(first_path.parent.parent.parent, Path(first_dir))
         self.assertEqual(second_path.parent.parent.parent, Path(second_dir))
+
+    def test_saves_with_same_prefix_and_timestamp_do_not_overwrite(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            with (
+                patch.dict(os.environ, {"HAQS_OUTPUT_DIR": temp_dir}),
+                patch.object(marketing, "datetime") as mock_datetime,
+            ):
+                mock_datetime.now.return_value = datetime(2026, 10, 3, 12, 0, 0)
+                first_path = marketing.save_text("email", "First draft")
+                second_path = marketing.save_text("email", "Second draft")
+
+            self.assertNotEqual(first_path, second_path)
+            self.assertEqual(first_path.read_text(encoding="utf-8"), "First draft\n")
+            self.assertEqual(second_path.read_text(encoding="utf-8"), "Second draft\n")
 
     def test_log_roi_event_returns_calculated_totals_and_writes_row(self):
         with tempfile.TemporaryDirectory() as temp_dir:
