@@ -53,6 +53,24 @@ class MarketingRoiTests(unittest.TestCase):
             self.assertEqual(first_path.read_text(encoding="utf-8"), "First draft\n")
             self.assertEqual(second_path.read_text(encoding="utf-8"), "Second draft\n")
 
+    def test_hourly_rate_falls_back_for_invalid_values(self):
+        for value in ("-1", "nan", "inf", "-inf", "not-a-number"):
+            with (
+                self.subTest(value=value),
+                patch.dict(os.environ, {"HOURLY_RATE": value}),
+            ):
+                self.assertEqual(
+                    marketing.get_hourly_rate(), marketing.DEFAULT_HOURLY_RATE
+                )
+
+    def test_hourly_rate_accepts_zero_and_positive_values(self):
+        for value, expected in (("0", 0.0), ("75.50", 75.5)):
+            with (
+                self.subTest(value=value),
+                patch.dict(os.environ, {"HOURLY_RATE": value}),
+            ):
+                self.assertEqual(marketing.get_hourly_rate(), expected)
+
     def test_log_roi_event_returns_calculated_totals_and_writes_row(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)

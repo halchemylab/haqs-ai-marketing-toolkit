@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import math
 import os
 from datetime import datetime
 from pathlib import Path
@@ -231,9 +232,10 @@ def get_hourly_rate() -> float:
         return DEFAULT_HOURLY_RATE
 
     try:
-        return float(raw_rate)
+        rate = float(raw_rate)
     except ValueError:
         return DEFAULT_HOURLY_RATE
+    return rate if math.isfinite(rate) and rate >= 0 else DEFAULT_HOURLY_RATE
 
 
 def get_openai_model() -> str:
