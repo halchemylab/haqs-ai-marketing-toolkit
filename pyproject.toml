@@ -7,7 +7,7 @@ name = "haqs-ai-marketing-toolkit"
 version = "0.1.0"
 description = "Terminal scripts for generating marketing content, campaign URLs, QR codes, and project plans."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 dependencies = [
     "openai>=1.0.0",
     "python-dotenv>=1.0.0",
@@ -46,11 +46,11 @@ python_functions = ["test_*"]
 
 [tool.black]
 line-length = 88
-target-version = ["py310"]
+target-version = ["py313"]
 
 [tool.ruff]
 line-length = 88
-target-version = "py310"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

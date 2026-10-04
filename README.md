@@ -175,6 +175,8 @@ need review when AI is unavailable.
 
 ## Setup
 
+Python 3.13 or newer is required.
+
 Install the toolkit and its dependencies:
 
 ```powershell
